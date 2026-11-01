@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,36 +7,61 @@
   <meta name="description" content="High-performance URL Shortener with real-time analytics, QR codes, password protection, and one-time burner links.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/dashboard.css">
 </head>
 <body>
 
+  <!-- Background decorative grid and glow -->
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
   <!-- Top Navigation Bar -->
   <header class="navbar">
     <div class="container nav-content">
-      <a href="/" class="brand">
+      <a href="/" class="brand" aria-label="LinkScale Home">
         <div class="brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
           </svg>
         </div>
-        <span>LinkScale</span>
+        <span class="brand-text">LinkScale</span>
       </a>
 
       <div class="nav-links">
-        <div id="systemStatusPill" class="badge-status">
-          <span class="status-dot"></span> Checking...
+        <div id="systemStatusPill" class="badge-status" title="Live Database & Redis Telemetry">
+          <span class="status-dot"></span> Online (1.2ms)
         </div>
+        
         <a href="/docs" target="_blank" class="nav-item">API Docs</a>
-        <button id="authBtn" class="btn-secondary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+        <!-- Theme Toggle Button -->
+        <button id="themeToggleBtn" class="icon-toggle-btn" aria-label="Toggle Color Theme" title="Toggle theme (Light / Dark)">
+          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Auth Button -->
+        <button id="authBtn" class="btn-ghost">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
             <polyline points="10 17 15 12 10 7"></polyline>
             <line x1="15" y1="12" x2="3" y2="12"></line>
           </svg>
-          Sign In
+          <span>Sign In</span>
         </button>
       </div>
     </div>
@@ -45,102 +70,159 @@
   <main class="container">
     <!-- Hero Section -->
     <section class="hero">
-      <div class="hero-pill">⚡ High-Speed Distributed URL Shortener</div>
-      <h1>Shorten Links. <br><span class="gradient-text">Track Everything in Real Time.</span></h1>
-      <p>Blazing fast redirects with built-in QR codes, password protection, one-time self-destruct links, and deep visitor analytics.</p>
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>High-Speed Distributed URL Shortener</span>
+      </div>
+      
+      <h1 class="hero-headline">
+        Shorten Links.<br>
+        <span class="gradient-text">Track Everything in Real Time.</span>
+      </h1>
+      
+      <p class="hero-subtext">
+        Blazing fast redirects with built-in QR codes, password protection, one-time self-destruct links, and privacy-preserving clickstream analytics.
+      </p>
+
+      <!-- Trust Chips -->
+      <div class="trust-chips">
+        <div class="trust-chip">
+          <span class="chip-dot"></span>
+          <span>QR Codes</span>
+        </div>
+        <div class="trust-chip">
+          <span class="chip-dot"></span>
+          <span>Password Protect</span>
+        </div>
+        <div class="trust-chip">
+          <span class="chip-dot"></span>
+          <span>Self-Destruct</span>
+        </div>
+        <div class="trust-chip">
+          <span class="chip-dot"></span>
+          <span>Real-Time Analytics</span>
+        </div>
+      </div>
     </section>
 
-    <!-- Shortener Input Card -->
-    <section class="glass-panel shortener-card">
-      <form id="shortenForm">
+    <!-- Shortener Input Card (Spotlight) -->
+    <section class="spotlight-card shortener-card">
+      <form id="shortenForm" novalidate>
         <div class="input-group-hero">
           <div class="url-input-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="url-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="2" y1="12" x2="22" y2="12"></line>
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
             </svg>
-            <input type="url" id="urlInput" class="url-input" placeholder="Paste your long link here (e.g. https://super-long-destination-url.com)..." required autofocus>
+            <input type="text" id="urlInput" inputmode="url" class="url-input" placeholder="Paste your long link here (e.g. https://super-long-destination-url.com)..." required autofocus>
+            
+            <div class="input-trailing-actions">
+              <button type="button" id="pasteBtn" class="paste-btn" title="Paste from clipboard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                <span>Paste</span>
+              </button>
+              <kbd class="kbd-hint" title="Press Ctrl+K or Cmd+K to focus">⌘K</kbd>
+            </div>
           </div>
-          <button type="submit" class="btn-primary">
-            Shorten URL
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          
+          <button type="submit" class="btn-primary" id="shortenSubmitBtn">
+            <span class="btn-text">Shorten URL</span>
+            <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
           </button>
         </div>
 
-        <button type="button" id="optionsToggle" class="options-toggle-btn">
-          <span>Advanced Options (Alias, Password, Burner, UTM) ▼</span>
+        <!-- Accordion Toggle Button -->
+        <button type="button" id="optionsToggle" class="options-accordion-btn" aria-expanded="false">
+          <div class="accordion-btn-left">
+            <svg class="settings-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span class="toggle-label-text">Advanced Options (Alias, Password, Burner, UTM)</span>
+          </div>
+          <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
         </button>
 
         <!-- Advanced Options Drawer -->
         <div id="optionsDrawer" class="options-drawer">
-          <div class="form-group">
-            <label for="aliasInput">Custom Alias</label>
-            <input type="text" id="aliasInput" class="form-control" placeholder="e.g. my-launch">
-          </div>
-
-          <div class="form-group">
-            <label for="passwordInput">Password Protection</label>
-            <input type="password" id="passwordInput" class="form-control" placeholder="Leave empty for public link">
-          </div>
-
-          <div class="form-group">
-            <label for="httpCodeSelect">Redirect Status Code</label>
-            <select id="httpCodeSelect" class="form-control">
-              <option value="302">302 Temporary (Default / Trackable)</option>
-              <option value="301">301 Permanent</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <div class="switch-wrapper">
-              <span class="switch-label">🔥 One-Time Burner Link</span>
-              <label class="switch">
-                <input type="checkbox" id="oneTimeToggle">
-                <span class="slider"></span>
-              </label>
-            </div>
-            <p style="font-size:0.75rem; color:var(--text-dim); margin-top:0.2rem;">Self-destructs immediately after the first visitor clicks it.</p>
-          </div>
-
-          <!-- UTM Campaign Builder Section -->
-          <div class="utm-builder-panel">
-            <div class="utm-header-row">
-              <span class="utm-title">🎯 UTM Campaign Builder (Marketing Attribution)</span>
-              <span style="font-size:0.75rem; color:var(--text-dim);">Auto-appends to long destination URL</span>
-            </div>
-
-            <!-- Quick Preset Pills -->
-            <div class="utm-presets-row">
-              <span style="font-size:0.75rem; color:var(--text-muted); align-self:center;">Presets:</span>
-              <button type="button" class="utm-preset-pill" data-source="google" data-medium="cpc" data-campaign="search_ads">Google Ads</button>
-              <button type="button" class="utm-preset-pill" data-source="twitter" data-medium="social" data-campaign="launch_post">Twitter / X</button>
-              <button type="button" class="utm-preset-pill" data-source="newsletter" data-medium="email" data-campaign="weekly_digest">Newsletter</button>
-              <button type="button" class="utm-preset-pill" data-source="linkedin" data-medium="social" data-campaign="b2b_promo">LinkedIn</button>
-              <button type="button" class="utm-preset-pill clear-btn" id="clearUtmBtn">Clear</button>
-            </div>
-
-            <div class="utm-inputs-grid">
-              <div class="form-group" style="margin-bottom:0;">
-                <label for="utmSource" style="font-size:0.75rem;">Campaign Source</label>
-                <input type="text" id="utmSource" class="form-control" placeholder="e.g. google, twitter" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
-              </div>
-              <div class="form-group" style="margin-bottom:0;">
-                <label for="utmMedium" style="font-size:0.75rem;">Campaign Medium</label>
-                <input type="text" id="utmMedium" class="form-control" placeholder="e.g. cpc, email, social" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
-              </div>
-              <div class="form-group" style="margin-bottom:0;">
-                <label for="utmCampaign" style="font-size:0.75rem;">Campaign Name</label>
-                <input type="text" id="utmCampaign" class="form-control" placeholder="e.g. summer_sale_2026" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
+          <div class="options-inner-grid">
+            <div class="form-group">
+              <label for="aliasInput">Custom Alias</label>
+              <div class="input-prefix-box">
+                <span class="url-prefix">/</span>
+                <input type="text" id="aliasInput" class="form-control" placeholder="e.g. launch-2026">
               </div>
             </div>
 
-            <div id="utmPreviewRow" class="utm-preview-row">
-              <span style="color:var(--text-muted); font-weight:600;">Full URL Preview: </span>
-              <span id="utmPreviewText" class="utm-preview-text">(Paste destination URL above to preview)</span>
+            <div class="form-group">
+              <label for="passwordInput">Password Protection</label>
+              <input type="password" id="passwordInput" class="form-control" placeholder="Leave empty for public link">
+            </div>
+
+            <div class="form-group">
+              <label for="httpCodeSelect">Redirect Status Code</label>
+              <select id="httpCodeSelect" class="form-control select-control">
+                <option value="302">302 Temporary (Default / Trackable)</option>
+                <option value="301">301 Permanent</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <div class="switch-wrapper">
+                <span class="switch-label">🔥 One-Time Burner Link</span>
+                <label class="switch">
+                  <input type="checkbox" id="oneTimeToggle">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <p class="field-hint">Self-destructs immediately after the first visitor clicks it.</p>
+            </div>
+
+            <!-- UTM Campaign Builder Section -->
+            <div class="utm-builder-panel">
+              <div class="utm-header-row">
+                <span class="utm-title">🎯 UTM Campaign Builder (Marketing Attribution)</span>
+                <span class="utm-sub">Auto-appends to long destination URL</span>
+              </div>
+
+              <!-- Quick Preset Pills -->
+              <div class="utm-presets-row">
+                <span class="preset-label">Presets:</span>
+                <button type="button" class="utm-preset-pill" data-source="google" data-medium="cpc" data-campaign="search_ads">Google Ads</button>
+                <button type="button" class="utm-preset-pill" data-source="twitter" data-medium="social" data-campaign="launch_post">Twitter / X</button>
+                <button type="button" class="utm-preset-pill" data-source="newsletter" data-medium="email" data-campaign="weekly_digest">Newsletter</button>
+                <button type="button" class="utm-preset-pill" data-source="linkedin" data-medium="social" data-campaign="b2b_promo">LinkedIn</button>
+                <button type="button" class="utm-preset-pill clear-btn" id="clearUtmBtn">Clear</button>
+              </div>
+
+              <div class="utm-inputs-grid">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="utmSource">Campaign Source</label>
+                  <input type="text" id="utmSource" class="form-control" placeholder="e.g. google, twitter">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="utmMedium">Campaign Medium</label>
+                  <input type="text" id="utmMedium" class="form-control" placeholder="e.g. cpc, email, social">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="utmCampaign">Campaign Name</label>
+                  <input type="text" id="utmCampaign" class="form-control" placeholder="e.g. summer_sale_2026">
+                </div>
+              </div>
+
+              <div id="utmPreviewRow" class="utm-preview-row">
+                <span class="preview-tag">Full URL Preview:</span>
+                <span id="utmPreviewText" class="utm-preview-text">(Paste destination URL above to preview)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -149,38 +231,50 @@
       <!-- Instant Result Card -->
       <div id="resultCard" class="result-card">
         <div class="result-header">
-          <span style="font-size:0.85rem; font-weight:600; color:#a5b4fc;">Your shortened link is ready!</span>
+          <div class="result-status-tag">
+            <span class="result-dot"></span>
+            <span>Your shortened link is ready!</span>
+          </div>
           <div id="resultBadges" class="result-badges"></div>
         </div>
         <div class="result-link-row">
           <a id="shortUrlLink" href="#" target="_blank" class="short-url-text"></a>
           <div class="result-actions">
-            <button id="copyBtn" class="btn-primary" style="padding: 0.55rem 1rem; font-size: 0.85rem;">
+            <button id="copyBtn" class="btn-primary copy-action-btn">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
               </svg>
-              Copy
+              <span>Copy</span>
             </button>
-            <button id="openQrModalBtn" class="btn-secondary" style="padding: 0.55rem 0.9rem;">
+            <button id="openQrModalBtn" class="btn-secondary" title="View Wi-Fi Scannable QR Code">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="3" width="7" height="7"></rect>
                 <rect x="14" y="3" width="7" height="7"></rect>
                 <rect x="14" y="14" width="7" height="7"></rect>
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
-              QR Code
+              <span>QR Code</span>
             </button>
+            <a id="openResultLinkBtn" href="#" target="_blank" class="btn-ghost icon-only" title="Open short URL in new tab">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
           </div>
         </div>
       </div>
     </section>
 
     <!-- My Links Section -->
-    <section class="glass-panel" style="padding: 1.75rem; margin-bottom: 3rem;">
+    <section class="spotlight-card links-section">
       <div class="section-header">
-        <h2 class="section-title">My Shortened Links</h2>
-        <span style="font-size:0.85rem; color:var(--text-dim);">Live click logs & analytics</span>
+        <div>
+          <h2 class="section-title">My Shortened Links</h2>
+          <span class="section-subtitle">Live click logs, geographic telemetry & deep analytics</span>
+        </div>
       </div>
 
       <div class="table-wrapper">
@@ -190,13 +284,16 @@
               <th>Short Code</th>
               <th>Destination</th>
               <th>Total Clicks</th>
-              <th>Actions</th>
+              <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody id="urlsTableBody">
             <tr>
-              <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 2rem;">
-                Loading your shortened links...
+              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                <div class="loading-spinner-box">
+                  <div class="spinner"></div>
+                  <span>Loading your links...</span>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -209,17 +306,22 @@
   <div id="qrModal" class="modal-overlay">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title">QR Code</h3>
-        <button class="modal-close">&times;</button>
+        <h3 class="modal-title">Wi-Fi Scannable QR Code</h3>
+        <button class="modal-close" aria-label="Close modal">&times;</button>
       </div>
       <div class="modal-body" style="text-align: center;">
         <div class="qr-preview-box">
           <img id="qrImg" src="" alt="Short Link QR Code">
         </div>
-        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1.25rem;">
-          Point any smartphone camera to test instant Wi-Fi redirection.
+        <p class="modal-hint">
+          Scan with any iPhone or Android camera app over local Wi-Fi to test instant redirection.
         </p>
         <button id="qrDownloadBtn" class="btn-primary" style="width: 100%;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
           Download PNG
         </button>
       </div>
@@ -228,10 +330,13 @@
 
   <!-- Deep Analytics Modal -->
   <div id="analyticsModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 650px;">
+    <div class="modal-content modal-analytics">
       <div class="modal-header">
-        <h3 id="analyticsModalTitle" class="modal-title">Analytics</h3>
-        <button class="modal-close">&times;</button>
+        <div class="modal-header-info">
+          <span class="modal-tag">REAL-TIME TELEMETRY</span>
+          <h3 id="analyticsModalTitle" class="modal-title">Analytics for Short Link</h3>
+        </div>
+        <button class="modal-close" aria-label="Close modal">&times;</button>
       </div>
       <div class="modal-body">
         <!-- 3 Metric Cards -->
@@ -241,32 +346,35 @@
             <div class="metric-lbl">Total Clicks</div>
           </div>
           <div class="metric-card">
-            <div id="metricUniqueVisitors" class="metric-val" style="color:#10b981;">0</div>
+            <div id="metricUniqueVisitors" class="metric-val accent">0</div>
             <div class="metric-lbl">Unique Visitors</div>
           </div>
           <div class="metric-card">
-            <div id="metricBotClicks" class="metric-val" style="color:#f59e0b;">0</div>
+            <div id="metricBotClicks" class="metric-val muted">0</div>
             <div class="metric-lbl">Bot Clicks</div>
           </div>
         </div>
 
         <!-- Clicks Timeline Canvas Chart -->
         <div class="analytics-chart-box">
-          <div class="chart-title">Clicks Over Time</div>
+          <div class="chart-header">
+            <div class="chart-title">Clicks Over Time</div>
+            <span class="chart-sub">Real-time hourly & daily trends</span>
+          </div>
           <canvas id="clicksChart"></canvas>
         </div>
 
-        <!-- Breakdowns Grid -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
-          <div>
+        <!-- Breakdowns Grid (3 Columns) -->
+        <div class="breakdowns-grid">
+          <div class="breakdown-card">
             <div class="chart-title">🌍 Top Locations</div>
             <div id="countriesBreakdownList" class="breakdown-list"></div>
           </div>
-          <div>
+          <div class="breakdown-card">
             <div class="chart-title">📱 Devices</div>
             <div id="devicesBreakdownList" class="breakdown-list"></div>
           </div>
-          <div>
+          <div class="breakdown-card">
             <div class="chart-title">🌐 Top Browsers</div>
             <div id="browsersBreakdownList" class="breakdown-list"></div>
           </div>
@@ -286,30 +394,30 @@
 
   <!-- Sign In / Register Modal -->
   <div id="authModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 420px;">
+    <div class="modal-content modal-auth">
       <div class="modal-header">
-        <h3 id="authModalTitle" class="modal-title">Sign In</h3>
-        <button class="modal-close">&times;</button>
+        <h3 id="authModalTitle" class="modal-title">Sign In to LinkScale</h3>
+        <button class="modal-close" aria-label="Close modal">&times;</button>
       </div>
       <div class="modal-body">
         <form id="authForm">
-          <div id="emailGroup" class="form-group" style="display: none; margin-bottom: 1rem;">
+          <div id="emailGroup" class="form-group" style="display: none;">
             <label for="authEmail">Email Address</label>
-            <input type="email" id="authEmail" class="form-control" placeholder="you@example.com">
+            <input type="email" id="authEmail" class="form-control" placeholder="you@company.com">
           </div>
-          <div class="form-group" style="margin-bottom: 1rem;">
+          <div class="form-group">
             <label for="authUsername">Username</label>
             <input type="text" id="authUsername" class="form-control" placeholder="Enter username" required>
           </div>
-          <div class="form-group" style="margin-bottom: 1.5rem;">
+          <div class="form-group">
             <label for="authPassword">Password</label>
             <input type="password" id="authPassword" class="form-control" placeholder="••••••••" required>
           </div>
-          <button type="submit" id="authSubmitBtn" class="btn-primary" style="width: 100%; margin-bottom: 1rem;">
+          <button type="submit" id="authSubmitBtn" class="btn-primary" style="width: 100%; margin-top: 0.5rem; margin-bottom: 1rem;">
             Sign In
           </button>
           <div style="text-align: center;">
-            <a href="#" id="authToggleLink" style="font-size: 0.85rem; color: #818cf8; text-decoration: none;">
+            <a href="#" id="authToggleLink" class="auth-toggle-link">
               Don't have an account? Sign up
             </a>
           </div>
@@ -319,12 +427,19 @@
   </div>
 
   <!-- Toast Notification -->
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- Footer -->
   <footer>
-    <div class="container">
-      <p>LinkScale Platform &copy; 2026. Built with FastAPI, SQLite/PostgreSQL, Redis, Kafka, and Vanilla JS.</p>
+    <div class="container footer-content">
+      <div class="footer-links">
+        <a href="/docs" target="_blank">Interactive API Docs</a>
+        <span class="footer-sep">•</span>
+        <a href="/health" target="_blank">System Health</a>
+        <span class="footer-sep">•</span>
+        <a href="https://github.com/Anish2804/Url-Shortner" target="_blank">GitHub Repository</a>
+      </div>
+      <p class="footer-text">LinkScale Enterprise Platform &copy; 2026. Built with FastAPI, PostgreSQL/SQLite, Redis, Kafka, and vanilla JavaScript.</p>
     </div>
   </footer>
 
