@@ -23,10 +23,20 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # HTTP Strict Transport Security (HSTS)
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
 
-        # Content Security Policy (restricted default)
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
-        )
+        # Content Security Policy (allows Swagger UI CDN assets on docs while strictly defending app)
+        if request.url.path in ("/docs", "/redoc", "/docs/oauth2-redirect"):
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self' https://cdn.jsdelivr.net; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+                "font-src 'self' https://cdn.jsdelivr.net data:; "
+                "connect-src 'self'"
+            )
+        else:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+            )
 
         # Referrer Policy
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
