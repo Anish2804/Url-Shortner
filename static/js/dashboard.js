@@ -76,6 +76,8 @@ if (themeToggleBtn) {
     localStorage.setItem('linkscale_theme', nextTheme);
     showToast(`Switched to ${nextTheme} theme`);
     
+    if (updateAmbientTheme) updateAmbientTheme();
+
     // Redraw chart if analytics modal is open
     if (state.currentAnalyticsCode && analyticsModal.classList.contains('active')) {
       drawClickTimelineChart(state.currentTimeSeries || []);
@@ -86,7 +88,208 @@ if (themeToggleBtn) {
 initTheme();
 
 // -------------------------------------------------------------
-// 2. Spotlight Cursor Follower
+// 2. Animated Ambient Aurora & Interactive Canvas Environment
+// -------------------------------------------------------------
+let updateAmbientTheme = null;
+
+function initAmbientBackground() {
+  const canvas = document.getElementById('ambientCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+
+  // Mouse Parallax & Reactive Spring
+  const mouse = { x: -1000, y: -1000, targetX: 0, targetY: 0, currentX: 0, currentY: 0 };
+
+  window.addEventListener('mousemove', (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+    // Normalize coordinates for subtle organic parallax
+    mouse.targetX = (e.clientX / (width || 1) - 0.5) * 50;
+    mouse.targetY = (e.clientY / (height || 1) - 0.5) * 35;
+  }, { passive: true });
+
+  window.addEventListener('mouseleave', () => {
+    mouse.x = -1000;
+    mouse.y = -1000;
+    mouse.targetX = 0;
+    mouse.targetY = 0;
+  });
+
+  // Aurora Nebula Orbs Configuration
+  const orbs = [
+    { baseX: 0.22, baseY: 0.16, rMin: 340, rMax: 500, speedX: 0.00045, speedY: 0.00035, phaseX: 0, phaseY: 1.2, parallax: 0.8, colorDark: [16, 185, 129, 0.16], colorLight: [16, 185, 129, 0.07] },
+    { baseX: 0.74, baseY: 0.20, rMin: 360, rMax: 540, speedX: 0.00038, speedY: 0.00042, phaseX: 2.1, phaseY: 0.5, parallax: 1.1, colorDark: [110, 231, 183, 0.13], colorLight: [110, 231, 183, 0.06] },
+    { baseX: 0.48, baseY: 0.38, rMin: 290, rMax: 440, speedX: 0.00052, speedY: 0.00048, phaseX: 4.2, phaseY: 3.1, parallax: 0.6, colorDark: [45, 212, 191, 0.12], colorLight: [45, 212, 191, 0.05] },
+    { baseX: 0.82, baseY: 0.62, rMin: 310, rMax: 480, speedX: 0.00032, speedY: 0.00030, phaseX: 1.5, phaseY: 4.5, parallax: 0.4, colorDark: [5, 150, 105, 0.11], colorLight: [5, 150, 105, 0.05] }
+  ];
+
+  // Ambient Floating Stardust Particles
+  const PARTICLE_COUNT = 34;
+  const particles = [];
+
+  function initParticles() {
+    particles.length = 0;
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * (width || window.innerWidth),
+        y: Math.random() * (height || window.innerHeight),
+        vx: (Math.random() - 0.5) * 0.22,
+        vy: -0.12 - Math.random() * 0.32,
+        baseRadius: 1 + Math.random() * 1.4,
+        alpha: 0.2 + Math.random() * 0.45,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.008 + Math.random() * 0.012
+      });
+    }
+  }
+
+  function resize() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    ctx.scale(dpr, dpr);
+    if (particles.length === 0) {
+      initParticles();
+    }
+  }
+
+  resize();
+  window.addEventListener('resize', resize, { passive: true });
+
+  let animFrameId = null;
+  let isRunning = true;
+
+  function render(time) {
+    if (!isRunning) return;
+
+    // Smooth mouse parallax damping
+    mouse.currentX += (mouse.targetX - mouse.currentX) * 0.05;
+    mouse.currentY += (mouse.targetY - mouse.currentY) * 0.05;
+
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
+
+    // Ethereal blending: screen in dark mode for soft glowing nebula layers
+    ctx.globalCompositeOperation = isLight ? 'source-over' : 'screen';
+
+    // 1. Draw Aurora Orbs
+    for (let i = 0; i < orbs.length; i++) {
+      const orb = orbs[i];
+      const ox = width * orb.baseX + Math.sin(time * orb.speedX + orb.phaseX) * (width * 0.07) + mouse.currentX * orb.parallax;
+      const oy = height * orb.baseY + Math.cos(time * orb.speedY + orb.phaseY) * (height * 0.07) + mouse.currentY * orb.parallax;
+      const r = orb.rMin + (Math.sin(time * 0.0006 + orb.phaseX) * 0.5 + 0.5) * (orb.rMax - orb.rMin);
+
+      const color = isLight ? orb.colorLight : orb.colorDark;
+      const grad = ctx.createRadialGradient(ox, oy, 0, ox, oy, Math.max(r, 10));
+      grad.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`);
+      grad.addColorStop(0.55, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] * 0.4})`);
+      grad.addColorStop(1, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0)`);
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(ox, oy, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 2. Draw Dust Particles & Proximity Connections
+    ctx.globalCompositeOperation = 'source-over';
+    const pColor = isLight ? '5, 150, 105' : '110, 231, 183';
+    const maxConnDist = 95;
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+
+      // Drift & shimmer
+      p.x += p.vx;
+      p.y += p.vy;
+      p.phase += p.speed;
+
+      // Mouse repulsion aura
+      if (mouse.x > 0 && mouse.y > 0) {
+        const dx = p.x - mouse.x;
+        const dy = p.y - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 110 && dist > 1) {
+          const force = ((110 - dist) / 110) * 1.1;
+          p.x += (dx / dist) * force;
+          p.y += (dy / dist) * force;
+        }
+      }
+
+      // Edge wrap
+      if (p.x < -10) p.x = width + 10;
+      if (p.x > width + 10) p.x = -10;
+      if (p.y < -10) p.y = height + 10;
+      if (p.y > height + 10) p.y = -10;
+
+      // Pulse alpha
+      const currentAlpha = Math.max(0.08, p.alpha * (0.7 + 0.3 * Math.sin(p.phase)));
+
+      // Draw particle
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.baseRadius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${pColor}, ${currentAlpha})`;
+      ctx.fill();
+
+      // Proximity network connections
+      for (let j = i + 1; j < particles.length; j++) {
+        const p2 = particles[j];
+        const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+        if (dist < maxConnDist) {
+          const lineAlpha = (1 - dist / maxConnDist) * 0.12 * (isLight ? 0.6 : 1);
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.strokeStyle = `rgba(${pColor}, ${lineAlpha})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+
+    if (!prefersReduced) {
+      animFrameId = requestAnimationFrame(render);
+    }
+  }
+
+  // Handle visibility change (pause when tab hidden to preserve GPU/battery)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      isRunning = false;
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+    } else {
+      if (!isRunning && !prefersReduced) {
+        isRunning = true;
+        animFrameId = requestAnimationFrame(render);
+      }
+    }
+  });
+
+  updateAmbientTheme = () => {
+    if (prefersReduced) {
+      render(1000);
+    }
+  };
+
+  animFrameId = requestAnimationFrame(render);
+}
+
+initAmbientBackground();
+
+// -------------------------------------------------------------
+// 3. Spotlight Cursor Follower
 // -------------------------------------------------------------
 document.querySelectorAll('.spotlight-card').forEach(card => {
   card.addEventListener('mousemove', (e) => {
@@ -99,7 +302,7 @@ document.querySelectorAll('.spotlight-card').forEach(card => {
 });
 
 // -------------------------------------------------------------
-// 3. Toast Notifications
+// 4. Toast Notifications
 // -------------------------------------------------------------
 let toastTimer = null;
 function showToast(message, duration = 3000) {
@@ -295,6 +498,12 @@ shortenForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   let originalUrl = urlInput.value.trim();
   if (!originalUrl) return;
+
+  if (!state.token) {
+    showToast('Please sign in or create an account to shorten links 🔒');
+    if (authModal) authModal.classList.add('active');
+    return;
+  }
 
   // Auto-prepend https:// if protocol is omitted
   if (!originalUrl.startsWith('http://') && !originalUrl.startsWith('https://')) {
@@ -842,6 +1051,9 @@ authForm.addEventListener('submit', async (e) => {
     authModal.classList.remove('active');
     updateAuthUI();
     showToast(`Welcome back, ${username}! 👋`);
+    if (urlInput && urlInput.value.trim()) {
+      shortenForm.requestSubmit();
+    }
   } catch (err) {
     showToast(`Error: ${err.message}`);
   } finally {

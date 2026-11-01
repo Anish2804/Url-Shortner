@@ -7,24 +7,28 @@
   <meta name="description" content="High-performance URL Shortener with real-time analytics, QR codes, password protection, and one-time burner links.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/dashboard.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=3.0.0">
 </head>
 <body>
 
-  <!-- Background decorative grid and glow -->
-  <div class="bg-glow" aria-hidden="true"></div>
-  <div class="bg-grid" aria-hidden="true"></div>
+  <!-- Animated Ambient Aurora & Interactive Mesh Background -->
+  <canvas id="ambientCanvas" aria-hidden="true"></canvas>
+  <div class="bg-vignette" aria-hidden="true"></div>
+  <div class="bg-grid-overlay" aria-hidden="true"></div>
 
   <!-- Top Navigation Bar -->
   <header class="navbar">
     <div class="container nav-content">
       <a href="/" class="brand" aria-label="LinkScale Home">
-        <div class="brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-          </svg>
+        <div class="brand-icon-wrapper">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+          <div class="brand-glow"></div>
         </div>
         <span class="brand-text">LinkScale</span>
       </a>
@@ -71,8 +75,8 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-badge">
-        <span class="badge-dot"></span>
-        <span>High-Speed Distributed URL Shortener</span>
+        <span class="badge-dot-glow"></span>
+        <span class="badge-text">Enterprise Distributed Engine</span>
       </div>
       
       <h1 class="hero-headline">
@@ -81,24 +85,24 @@
       </h1>
       
       <p class="hero-subtext">
-        Blazing fast redirects with built-in QR codes, password protection, one-time self-destruct links, and privacy-preserving clickstream analytics.
+        High-performance URL redirection with sub-10ms latency, built-in Wi-Fi QR codes, one-time self-destruct links, and privacy-first clickstream intelligence.
       </p>
 
-      <!-- Trust Chips -->
+      <!-- Trust Chips with subtle organic floating -->
       <div class="trust-chips">
-        <div class="trust-chip">
+        <div class="trust-chip float-1">
           <span class="chip-dot"></span>
-          <span>QR Codes</span>
+          <span>Wi-Fi QR Codes</span>
         </div>
-        <div class="trust-chip">
+        <div class="trust-chip float-2">
           <span class="chip-dot"></span>
           <span>Password Protect</span>
         </div>
-        <div class="trust-chip">
+        <div class="trust-chip float-3">
           <span class="chip-dot"></span>
-          <span>Self-Destruct</span>
+          <span>One-Time Burner</span>
         </div>
-        <div class="trust-chip">
+        <div class="trust-chip float-4">
           <span class="chip-dot"></span>
           <span>Real-Time Analytics</span>
         </div>
@@ -107,6 +111,7 @@
 
     <!-- Shortener Input Card (Spotlight) -->
     <section class="spotlight-card shortener-card">
+      <div class="card-glow-layer" aria-hidden="true"></div>
       <form id="shortenForm" novalidate>
         <div class="input-group-hero">
           <div class="url-input-wrapper">
@@ -443,6 +448,6 @@
     </div>
   </footer>
 
-  <script src="/static/js/dashboard.js"></script>
+  <script src="/static/js/dashboard.js?v=3.0.0"></script>
 </body>
 </html>
