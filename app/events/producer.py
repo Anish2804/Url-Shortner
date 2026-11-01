@@ -27,6 +27,7 @@ class KafkaProducerManager:
         self.published_events: int = 0
         self.dropped_events: int = 0
         self.failed_events: int = 0
+        self._last_connect_attempt: float = 0.0
 
     async def start(self) -> None:
         """Start producer connection and background dispatcher."""
@@ -42,8 +43,14 @@ class KafkaProducerManager:
             self._is_connected = True
             logger.info("Kafka producer connected to %s", settings.KAFKA_BOOTSTRAP_SERVERS)
         except Exception as e:
+            if self._producer:
+                try:
+                    await self._producer.stop()
+                except Exception:
+                    pass
+            self._producer = None
             self._is_connected = False
-            logger.warning("Kafka is currently unavailable: %s. Using bounded buffering fallback.", str(e))
+            logger.info("Kafka broker offline (%s). Standalone local mode active (direct database persistence).", str(e))
 
         self._worker_task = asyncio.create_task(self._dispatch_loop())
 
@@ -133,18 +140,32 @@ class KafkaProducerManager:
     async def _publish_event(self, event: ClickEventMessage) -> None:
         """Send message to Kafka with partition key = short_code."""
         if not self._is_connected or not self._producer:
-            # Try reconnecting if disconnected
-            try:
-                if self._producer is None:
-                    self._producer = AIOKafkaProducer(
+            import time
+            now = time.time()
+            if now - self._last_connect_attempt > 30.0:
+                self._last_connect_attempt = now
+                p: Optional[AIOKafkaProducer] = None
+                try:
+                    p = AIOKafkaProducer(
                         bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
                         request_timeout_ms=settings.KAFKA_PRODUCER_TIMEOUT_MS,
                     )
-                    await self._producer.start()
-                self._is_connected = True
-            except Exception:
-                self.failed_events += 1
-                self._is_connected = False
+                    await p.start()
+                    self._producer = p
+                    self._is_connected = True
+                except Exception:
+                    if p:
+                        try:
+                            await p.stop()
+                        except Exception:
+                            pass
+                    self._producer = None
+                    self._is_connected = False
+
+            if not self._is_connected:
+                # Standalone Fallback: Persist directly to DB when Kafka broker is offline
+                await self._persist_event_direct(event)
+                self.published_events += 1
                 return
 
         try:
@@ -158,7 +179,56 @@ class KafkaProducerManager:
             self.published_events += 1
         except Exception as e:
             self.failed_events += 1
-            logger.warning("Failed to publish event %s to Kafka: %s", event.event_id, str(e))
+            logger.warning("Failed to publish event %s to Kafka, persisting locally: %s", event.event_id, str(e))
+            await self._persist_event_direct(event)
+
+    async def _persist_event_direct(self, event: ClickEventMessage) -> None:
+        """Standalone fallback: Persist click event directly to database when Kafka broker is offline."""
+        try:
+            import uuid
+            from datetime import datetime
+            from sqlalchemy import update
+            from app.database.session import async_session_factory
+            from app.models.analytics import ClickEvent
+            from app.models.url import Url
+
+            async with async_session_factory() as session:
+                url_id_val = uuid.UUID(event.url_id) if isinstance(event.url_id, str) else event.url_id
+                event_id_val = uuid.UUID(event.event_id) if isinstance(event.event_id, str) else event.event_id
+                clicked_at_val = (
+                    datetime.fromisoformat(event.timestamp)
+                    if isinstance(event.timestamp, str)
+                    else event.timestamp
+                )
+
+                click_orm = ClickEvent(
+                    id=event_id_val,
+                    url_id=url_id_val,
+                    short_code=event.short_code,
+                    ip_hash=event.ip_hash,
+                    anonymized_ip=event.anonymized_ip,
+                    user_agent=event.user_agent,
+                    device_type=event.device_type,
+                    browser=event.browser,
+                    os=event.os,
+                    country_code=event.country_code,
+                    city=event.city,
+                    referrer=event.referrer,
+                    referrer_domain=event.referrer_domain,
+                    is_bot=event.is_bot,
+                    clicked_at=clicked_at_val,
+                )
+                session.add(click_orm)
+                stmt = (
+                    update(Url)
+                    .where(Url.id == url_id_val)
+                    .values(click_count=Url.click_count + 1)
+                )
+                await session.execute(stmt)
+                await session.commit()
+                logger.info("Persisted click event %s for %s directly to database", event_id_val, event.short_code)
+        except Exception as e:
+            logger.error("Direct click event persistence failed: %s", str(e), exc_info=True)
 
     def get_metrics(self) -> Dict[str, Any]:
         """Producer observability telemetry."""
