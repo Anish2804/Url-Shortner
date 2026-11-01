@@ -79,3 +79,69 @@ async def test_auth_brute_force_lockout(client: AsyncClient):
     locked_res = await client.post("/api/v1/auth/login", json={"username_or_email": username, "password": pwd})
     assert locked_res.status_code == 403
     assert "locked" in locked_res.json()["error"]["message"].lower()
+
+
+@pytest.mark.asyncio
+async def test_password_reset_flow(client: AsyncClient):
+    """Test full forgot-password and reset-password token lifecycle."""
+    email = "reset_user@example.com"
+    username = "reset_user"
+    pwd = "OriginalPassword123!"
+
+    # 1. Register user
+    await client.post("/api/v1/auth/register", json={"email": email, "username": username, "password": pwd})
+
+    # 2. Request reset token
+    forgot_res = await client.post("/api/v1/auth/forgot-password", json={"email": email})
+    assert forgot_res.status_code == 200
+    reset_token = forgot_res.json()["data"]["reset_token"]
+    assert reset_token
+
+    # 3. Non-existent email returns success to prevent user enumeration
+    ghost_res = await client.post("/api/v1/auth/forgot-password", json={"email": "nonexistent@example.com"})
+    assert ghost_res.status_code == 200
+    assert "reset_token" not in ghost_res.json()["data"]
+
+    # 4. Perform password reset
+    new_pwd = "NewPassword123!"
+    reset_res = await client.post("/api/v1/auth/reset-password", json={"token": reset_token, "new_password": new_pwd})
+    assert reset_res.status_code == 200
+
+    # 5. Old password rejected
+    old_login = await client.post("/api/v1/auth/login", json={"username_or_email": username, "password": pwd})
+    assert old_login.status_code == 401
+
+    # 6. New password accepted
+    new_login = await client.post("/api/v1/auth/login", json={"username_or_email": username, "password": new_pwd})
+    assert new_login.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_email_verification_flow(client: AsyncClient):
+    """Test email verification token generation and confirmation."""
+    email = "verify_user@example.com"
+    username = "verify_user"
+    pwd = "VerifyPassword123!"
+
+    # 1. Register user
+    await client.post("/api/v1/auth/register", json={"email": email, "username": username, "password": pwd})
+    login_res = await client.post("/api/v1/auth/login", json={"username_or_email": username, "password": pwd})
+    token = login_res.json()["data"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Initial state: unverified
+    me_res = await client.get("/api/v1/users/me", headers=headers)
+    assert me_res.json()["data"]["is_verified"] is False
+
+    # 2. Request verification token
+    req_res = await client.post("/api/v1/auth/request-verification", json={"email": email})
+    assert req_res.status_code == 200
+    verify_token = req_res.json()["data"]["verification_token"]
+
+    # 3. Confirm email verification
+    confirm_res = await client.post("/api/v1/auth/verify-email", json={"token": verify_token})
+    assert confirm_res.status_code == 200
+
+    # 4. Account is now verified
+    verified_me = await client.get("/api/v1/users/me", headers=headers)
+    assert verified_me.json()["data"]["is_verified"] is True

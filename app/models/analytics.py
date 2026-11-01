@@ -1,9 +1,9 @@
 """Analytics ORM models: raw click events and pre-aggregated rollups."""
 
+import datetime as dt
 import uuid
-from datetime import date, datetime
 from typing import Optional
-from sqlalchemy import BigInteger, Boolean, Date, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, GUID, TimestampMixin, UUIDMixin
@@ -21,7 +21,7 @@ class ClickEvent(Base, UUIDMixin):
         nullable=False,
     )
     short_code: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
-    clicked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
+    clicked_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
 
     # Privacy-conscious visitor tracking (HMAC hashed IP, raw IP never stored)
     ip_hash: Mapped[str] = mapped_column(String(64), index=True, nullable=False)
@@ -58,7 +58,7 @@ class DailyAggregate(Base, UUIDMixin, TimestampMixin):
         index=True,
         nullable=False,
     )
-    date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
+    date: Mapped[dt.date] = mapped_column(Date, index=True, nullable=False)
     total_clicks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     unique_visitors: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     bot_clicks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -82,7 +82,7 @@ class HourlyAggregate(Base, UUIDMixin, TimestampMixin):
         index=True,
         nullable=False,
     )
-    hour_timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
+    hour_timestamp: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), index=True, nullable=False)
     total_clicks: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     unique_visitors: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 

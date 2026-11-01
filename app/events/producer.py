@@ -1,7 +1,6 @@
 """Asynchronous Kafka event producer with non-blocking bounded buffering."""
 
 import asyncio
-import json
 from typing import Any, Dict, Optional
 from aiokafka import AIOKafkaProducer
 
@@ -50,6 +49,14 @@ class KafkaProducerManager:
 
     async def stop(self) -> None:
         """Gracefully drain queue and shut down producer."""
+        qsize = self._queue.qsize()
+        if qsize > 0:
+            logger.info("Kafka producer stopping: draining %d buffered events...", qsize)
+            try:
+                await asyncio.wait_for(self._queue.join(), timeout=3.0)
+            except asyncio.TimeoutError:
+                logger.warning("Queue drain timed out, proceeding with shutdown.")
+
         self._is_running = False
         if self._worker_task:
             self._worker_task.cancel()
@@ -67,23 +74,56 @@ class KafkaProducerManager:
     def enqueue_click_event(self, event: ClickEventMessage) -> bool:
         """Non-blocking enqueue for redirect path.
         
-        Returns True if queued, False if queue was full (protects against unbounded memory).
+        Returns True if queued, spills to Redis or records drop if bounded memory exceeded.
         """
         try:
             self._queue.put_nowait(event)
             return True
         except asyncio.QueueFull:
-            self.dropped_events += 1
-            logger.warning("Kafka producer buffer full (%d items). Dropping click event to protect redirect latency.", self._queue.maxsize)
-            return False
+            try:
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._spillover_to_redis(event))
+                return True
+            except RuntimeError:
+                self.dropped_events += 1
+                logger.warning("Kafka producer buffer full (%d items). Dropping click event to protect redirect latency.", self._queue.maxsize)
+                return False
+
+    async def _spillover_to_redis(self, event: ClickEventMessage) -> None:
+        """Durable spillover to Redis list buffer when in-memory queue is saturated."""
+        try:
+            from app.cache.redis_client import redis_manager
+            r_client = await redis_manager.get_client()
+            if r_client:
+                await r_client.rpush("buffer:clicks:spillover", event.model_dump_json())
+                return
+        except Exception as e:
+            logger.debug("Redis spillover fallback failed: %s", str(e))
+        self.dropped_events += 1
 
     async def _dispatch_loop(self) -> None:
         """Background worker consuming from bounded queue and delivering to Kafka."""
         while self._is_running:
             try:
-                event = await self._queue.get()
-                await self._publish_event(event)
-                self._queue.task_done()
+                # 1. First drain from Redis spillover if present
+                try:
+                    from app.cache.redis_client import redis_manager
+                    r_client = await redis_manager.get_client()
+                    if r_client:
+                        raw_item = await r_client.lpop("buffer:clicks:spillover")
+                        if raw_item:
+                            spillover_msg = ClickEventMessage.model_validate_json(raw_item)
+                            await self._publish_event(spillover_msg)
+                except Exception:
+                    pass
+
+                # 2. Consume from internal bounded memory queue
+                try:
+                    event = await asyncio.wait_for(self._queue.get(), timeout=0.2)
+                    await self._publish_event(event)
+                    self._queue.task_done()
+                except asyncio.TimeoutError:
+                    continue
             except asyncio.CancelledError:
                 break
             except Exception as e:

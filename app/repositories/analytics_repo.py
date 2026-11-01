@@ -3,12 +3,12 @@
 import csv
 import io
 import uuid
-from datetime import date, datetime, timedelta, timezone
-from typing import Any, AsyncGenerator, Dict, List, Optional, Tuple
+from datetime import date, datetime, timezone
+from typing import Any, Dict, List, Optional
 from sqlalchemy import desc, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.analytics import ClickEvent, DailyAggregate, HourlyAggregate
+from app.models.analytics import ClickEvent
 from app.models.url import Url
 from app.repositories.base import BaseRepository
 

@@ -2,14 +2,13 @@
 
 import uuid
 from typing import Annotated, Optional
-from fastapi import Depends, Header, Request, Security
+from fastapi import Depends, Header, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenException, UnauthorizedException
 from app.core.security import decode_access_token
 from app.database.session import get_db
-from app.models.api_key import ApiKey
 from app.models.user import User
 from app.repositories.abuse_repo import AbuseRepository
 from app.repositories.analytics_repo import AnalyticsRepository
@@ -134,21 +133,31 @@ async def get_current_active_admin(
     return current_user
 
 
-async def get_user_from_jwt_or_api_key(
-    request: Request,
-    auth: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security_bearer)],
-    user_repo: Annotated[UserRepository, Depends(get_user_repo)],
-    api_key_service: Annotated[ApiKeyService, Depends(get_api_key_service)],
-    x_api_key: Annotated[Optional[str], Header()] = None,
-) -> User:
-    """Dual-mode authentication supporting either User Bearer JWT or machine API Key."""
-    # Check X-API-Key header first
-    if x_api_key:
-        user, _ = await api_key_service.verify_key(x_api_key)
-        return user
+def require_scope(required_scope: Optional[str] = None):
+    """Dependency factory enforcing authentication and API key permission scopes."""
+    async def _dependency(
+        request: Request,
+        auth: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security_bearer)],
+        user_repo: Annotated[UserRepository, Depends(get_user_repo)],
+        api_key_service: Annotated[ApiKeyService, Depends(get_api_key_service)],
+        x_api_key: Annotated[Optional[str], Header()] = None,
+    ) -> User:
+        # Check X-API-Key header first
+        if x_api_key:
+            user, _ = await api_key_service.verify_key(x_api_key, required_scope=required_scope)
+            return user
 
-    # Otherwise authenticate via JWT Bearer token
-    if auth and auth.credentials:
-        return await get_current_user(auth, user_repo)
+        # Otherwise authenticate via JWT Bearer token (JWT users have full ownership of their resources)
+        if auth and auth.credentials:
+            return await get_current_user(auth, user_repo)
 
-    raise UnauthorizedException("Authentication required via Bearer JWT or X-API-Key header")
+        raise UnauthorizedException("Authentication required via Bearer JWT or X-API-Key header")
+
+    return _dependency
+
+
+# Default and scope-specific authentication dependencies
+get_user_from_jwt_or_api_key = require_scope(None)
+require_urls_read = require_scope("urls:read")
+require_urls_write = require_scope("urls:write")
+require_analytics_read = require_scope("analytics:read")

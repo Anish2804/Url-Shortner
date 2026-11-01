@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import date, datetime
-from typing import Dict, List, Optional
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 

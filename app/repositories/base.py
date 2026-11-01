@@ -1,6 +1,6 @@
 """Generic asynchronous repository base class."""
 
-from typing import Any, Generic, List, Optional, Sequence, Type, TypeVar
+from typing import Any, Generic, Optional, Sequence, Type, TypeVar
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 

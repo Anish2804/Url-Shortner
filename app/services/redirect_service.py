@@ -23,7 +23,6 @@ from app.core.logging import get_logger
 from app.core.security import ensure_utc, verify_password
 from app.events.producer import kafka_producer
 from app.events.schema import ClickEventMessage
-from app.models.url import Url
 from app.repositories.url_repo import UrlRepository
 
 logger = get_logger("redirect_service")

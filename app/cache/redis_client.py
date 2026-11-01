@@ -4,7 +4,6 @@ import asyncio
 import time
 from typing import Any, Dict, Optional
 import redis.asyncio as aioredis
-from redis.exceptions import ConnectionError, RedisError, TimeoutError
 
 from app.core.config import settings
 from app.core.logging import get_logger

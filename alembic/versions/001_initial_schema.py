@@ -1,7 +1,7 @@
 """Initial production schema migration.
 
 Revision ID: 001_initial_schema
-Revises: 
+Revises:
 Create Date: 2026-11-01 00:00:00.000000
 """
 

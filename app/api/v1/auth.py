@@ -7,6 +7,10 @@ from app.api.dependencies import get_auth_service, get_current_user
 from app.models.user import User
 from app.schemas.auth import (
     ChangePasswordRequest,
+    EmailVerificationConfirm,
+    EmailVerificationRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     RefreshTokenRequest,
     TokenResponse,
     UserLogin,
@@ -74,3 +78,49 @@ async def change_password(
     """Change user password and revoke all other existing refresh tokens."""
     await auth_service.change_password(current_user, payload)
     return ApiResponse(success=True, data={"message": "Password changed successfully"})
+
+
+@router.post("/forgot-password", response_model=ApiResponse[dict])
+async def forgot_password(
+    payload: PasswordResetRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[dict]:
+    """Request a password reset token. Always returns success to prevent user enumeration."""
+    token = await auth_service.request_password_reset(payload)
+    data = {"message": "If the account exists, a password reset link has been dispatched."}
+    if token:
+        data["reset_token"] = token
+    return ApiResponse(success=True, data=data)
+
+
+@router.post("/reset-password", response_model=ApiResponse[dict])
+async def reset_password(
+    payload: PasswordResetConfirm,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[dict]:
+    """Reset user password using cryptographic single-purpose action token."""
+    await auth_service.reset_password(payload)
+    return ApiResponse(success=True, data={"message": "Password successfully updated. You may now log in."})
+
+
+@router.post("/request-verification", response_model=ApiResponse[dict])
+async def request_email_verification(
+    payload: EmailVerificationRequest,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[dict]:
+    """Dispatch email verification token for unverified account."""
+    token = await auth_service.request_email_verification(payload)
+    data = {"message": "Verification token generated."}
+    if token:
+        data["verification_token"] = token
+    return ApiResponse(success=True, data=data)
+
+
+@router.post("/verify-email", response_model=ApiResponse[dict])
+async def verify_email(
+    payload: EmailVerificationConfirm,
+    auth_service: Annotated[AuthService, Depends(get_auth_service)],
+) -> ApiResponse[dict]:
+    """Verify email address with action token."""
+    await auth_service.verify_email(payload)
+    return ApiResponse(success=True, data={"message": "Email address verified successfully."})

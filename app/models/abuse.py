@@ -2,7 +2,7 @@
 
 import uuid
 from typing import Optional
-from sqlalchemy import Boolean, ForeignKey, Index, String, Text
+from sqlalchemy import Boolean, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base, GUID, TimestampMixin, UUIDMixin

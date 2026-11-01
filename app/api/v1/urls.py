@@ -3,7 +3,11 @@
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query, Response, status
 
-from app.api.dependencies import get_url_service, get_user_from_jwt_or_api_key
+from app.api.dependencies import (
+    get_url_service,
+    require_urls_read,
+    require_urls_write,
+)
 from app.models.user import User
 from app.schemas.common import ApiResponse, PaginatedResponse, PaginationParams
 from app.schemas.url import (
@@ -22,7 +26,7 @@ router = APIRouter(prefix="/urls", tags=["URLs"])
 @router.post("/", response_model=ApiResponse[UrlResponse], status_code=status.HTTP_201_CREATED)
 async def create_short_url(
     payload: UrlCreate,
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_urls_write)],
     url_service: Annotated[UrlService, Depends(get_url_service)],
 ) -> ApiResponse[UrlResponse]:
     """Create a new shortened URL with collision-resistant Base62 ID or custom alias."""
@@ -33,7 +37,7 @@ async def create_short_url(
 @router.post("/bulk", response_model=ApiResponse[UrlBulkResponse], status_code=status.HTTP_201_CREATED)
 async def create_bulk_short_urls(
     payload: UrlBulkCreate,
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_urls_write)],
     url_service: Annotated[UrlService, Depends(get_url_service)],
 ) -> ApiResponse[UrlBulkResponse]:
     """Batch-create multiple shortened URLs in a single request (up to 100 items)."""
@@ -43,7 +47,7 @@ async def create_bulk_short_urls(
 
 @router.get("/", response_model=ApiResponse[PaginatedResponse[UrlResponse]])
 async def list_user_urls(
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_urls_read)],
     url_service: Annotated[UrlService, Depends(get_url_service)],
     pagination: Annotated[PaginationParams, Depends()],
     search: Annotated[Optional[str], Query(description="Search short code, alias, title or destination")] = None,
@@ -94,7 +98,7 @@ async def get_url_details(
 async def update_url(
     short_code: str,
     payload: UrlUpdate,
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_urls_write)],
     url_service: Annotated[UrlService, Depends(get_url_service)],
 ) -> ApiResponse[UrlResponse]:
     """Update destination URL, title, expiration, or password protection with cache invalidation."""
@@ -105,7 +109,7 @@ async def update_url(
 @router.delete("/{short_code}", response_model=ApiResponse[dict])
 async def delete_url(
     short_code: str,
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_urls_write)],
     url_service: Annotated[UrlService, Depends(get_url_service)],
 ) -> ApiResponse[dict]:
     """Soft-delete shortened URL and evict from cache."""

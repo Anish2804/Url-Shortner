@@ -2,8 +2,8 @@
 
 import uuid
 from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, ConfigDict, Field
+from typing import Any, List, Optional
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ApiKeyCreate(BaseModel):
@@ -33,6 +33,14 @@ class ApiKeyResponse(BaseModel):
     expires_at: Optional[datetime] = None
     last_used_at: Optional[datetime] = None
     created_at: datetime
+
+    @field_validator("scopes", mode="before")
+    @classmethod
+    def parse_scopes(cls, v: Any) -> List[str]:
+        """Convert comma-separated database string into a list of scope strings."""
+        if isinstance(v, str):
+            return [s.strip() for s in v.split(",") if s.strip()]
+        return v or []
 
 
 class ApiKeyCreatedResponse(ApiKeyResponse):

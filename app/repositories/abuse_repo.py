@@ -1,7 +1,7 @@
 """Abuse report and blocked domain repository."""
 
 import uuid
-from typing import Optional, Sequence
+from typing import Sequence
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 

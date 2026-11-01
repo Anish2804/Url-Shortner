@@ -17,6 +17,9 @@ from app.database.base import Base
 from app.database.session import get_db
 from app.main import app
 
+settings.ENVIRONMENT = "test"
+settings.REDIS_RATE_LIMIT_ENABLED = False
+
 # Test database in-memory engine with StaticPool
 TEST_DB_URL = "sqlite+aiosqlite:///:memory:"
 

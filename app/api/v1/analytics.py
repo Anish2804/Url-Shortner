@@ -4,7 +4,7 @@ from datetime import date
 from typing import Annotated, Optional
 from fastapi import APIRouter, Depends, Query, Response
 
-from app.api.dependencies import get_analytics_service, get_user_from_jwt_or_api_key
+from app.api.dependencies import get_analytics_service, require_analytics_read
 from app.models.user import User
 from app.schemas.analytics import (
     UrlAnalyticsSummary,
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/analytics", tags=["Analytics"])
 @router.get("/urls/{short_code}", response_model=ApiResponse[UrlAnalyticsSummary])
 async def get_url_analytics_summary(
     short_code: str,
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_analytics_read)],
     analytics_service: Annotated[AnalyticsService, Depends(get_analytics_service)],
     start_date: Annotated[Optional[date], Query(description="Start date (YYYY-MM-DD)")] = None,
     end_date: Annotated[Optional[date], Query(description="End date (YYYY-MM-DD)")] = None,
@@ -37,7 +37,7 @@ async def get_url_analytics_summary(
 @router.get("/urls/{short_code}/export")
 async def export_url_analytics_csv(
     short_code: str,
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_analytics_read)],
     analytics_service: Annotated[AnalyticsService, Depends(get_analytics_service)],
     start_date: Annotated[Optional[date], Query(description="Start date (YYYY-MM-DD)")] = None,
     end_date: Annotated[Optional[date], Query(description="End date (YYYY-MM-DD)")] = None,
@@ -59,7 +59,7 @@ async def export_url_analytics_csv(
 
 @router.get("/overview", response_model=ApiResponse[UserAnalyticsOverview])
 async def get_account_analytics_overview(
-    current_user: Annotated[User, Depends(get_user_from_jwt_or_api_key)],
+    current_user: Annotated[User, Depends(require_analytics_read)],
     analytics_service: Annotated[AnalyticsService, Depends(get_analytics_service)],
     start_date: Annotated[Optional[date], Query(description="Start date (YYYY-MM-DD)")] = None,
     end_date: Annotated[Optional[date], Query(description="End date (YYYY-MM-DD)")] = None,

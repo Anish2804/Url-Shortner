@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 from typing import List, Optional
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base, GUID, TimestampMixin, UUIDMixin

@@ -32,7 +32,7 @@ async def run_worker(
             latencies.append(elapsed_ms)
             status = resp.status_code
             status_counts[status] = status_counts.get(status, 0) + 1
-        except Exception as e:
+        except Exception:
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
             latencies.append(elapsed_ms)
             status_counts[599] = status_counts.get(599, 0) + 1
@@ -53,13 +53,13 @@ async def execute_benchmark(
     limits = httpx.Limits(max_keepalive_connections=concurrency, max_connections=concurrency * 2)
     timeout = httpx.Timeout(10.0, connect=5.0)
 
-    print(f"\n=======================================================")
-    print(f"URL Shortener Performance Benchmark")
+    print("\n=======================================================")
+    print("URL Shortener Performance Benchmark")
     print(f"Target Base:    {base_url}")
     print(f"Concurrency:    {concurrency} workers")
     print(f"Total Requests: {total_requests}")
     print(f"Sample Paths:   {test_paths}")
-    print(f"=======================================================\n")
+    print("=======================================================\n")
 
     overall_start = time.perf_counter()
 

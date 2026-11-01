@@ -3,7 +3,11 @@
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional, Tuple
-from app.core.exceptions import BadRequestException, NotFoundException, UnauthorizedException
+from app.core.exceptions import (
+    ForbiddenException,
+    NotFoundException,
+    UnauthorizedException,
+)
 from app.core.security import ensure_utc, generate_api_key, hash_token
 from app.models.api_key import ApiKey
 from app.models.user import User
@@ -87,7 +91,7 @@ class ApiKeyService:
             raise UnauthorizedException("API key has expired")
 
         if required_scope and not key_record.has_scope(required_scope):
-            raise UnauthorizedException(f"API key missing required permission scope '{required_scope}'")
+            raise ForbiddenException(f"API key missing required permission scope '{required_scope}'")
 
         # Update last used timestamp
         await self.api_key_repo.update_last_used(key_record.id)

@@ -24,11 +24,19 @@ def test_click_event_schema_versioning():
 def test_consumer_deduplication_cache():
     dedup = DeduplicationCache(capacity=5)
 
-    assert dedup.is_duplicate("evt-1") is False
-    assert dedup.is_duplicate("evt-1") is True  # Duplicate!
+    assert dedup.is_duplicate_local("evt-1") is False
+    assert dedup.is_duplicate_local("evt-1") is True  # Duplicate!
 
-    assert dedup.is_duplicate("evt-2") is False
-    assert dedup.is_duplicate("evt-2") is True
+    assert dedup.is_duplicate_local("evt-2") is False
+    assert dedup.is_duplicate_local("evt-2") is True
+
+
+@pytest.mark.asyncio
+async def test_consumer_deduplication_async():
+    dedup = DeduplicationCache(capacity=5)
+
+    assert await dedup.is_duplicate("evt-async-1") is False
+    assert await dedup.is_duplicate("evt-async-1") is True
 
 
 def test_producer_bounded_queue_backpressure():
@@ -48,10 +56,29 @@ def test_producer_bounded_queue_backpressure():
     assert producer.enqueue_click_event(event) is True
     assert producer.enqueue_click_event(event) is True
 
-    # 4th item must be dropped safely without raising QueueFull
+    # 4th item without event loop falls back safely
     assert producer.enqueue_click_event(event) is False
     assert producer.dropped_events == 1
 
     metrics = producer.get_metrics()
     assert metrics["queue_size"] == 3
     assert metrics["dropped_events"] == 1
+
+
+@pytest.mark.asyncio
+async def test_producer_graceful_drain_and_stop():
+    """Verify producer drains queue without crashing upon stop."""
+    producer = KafkaProducerManager()
+    producer._queue = asyncio.Queue(maxsize=10)
+    event = ClickEventMessage(
+        url_id="1234",
+        short_code="drain_test",
+        ip_hash="hash",
+    )
+    producer.enqueue_click_event(event)
+    assert producer._queue.qsize() == 1
+
+    # Mark task done so drain doesn't block
+    producer._queue.task_done()
+    await producer.stop()
+    assert producer._is_running is False

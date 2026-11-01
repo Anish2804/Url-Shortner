@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Sequence
+from typing import Optional
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -54,7 +54,7 @@ class UserRepository(BaseRepository[User]):
         return role
 
     async def increment_failed_logins(self, user: User, max_attempts: int, lockout_minutes: int) -> None:
-        user.failed_login_attempts += 1
+        user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
         if user.failed_login_attempts >= max_attempts:
             user.locked_until = datetime.now(timezone.utc) + timedelta(minutes=lockout_minutes)
         await self.session.flush()

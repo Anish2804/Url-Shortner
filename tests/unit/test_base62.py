@@ -1,6 +1,5 @@
 """Unit tests for Base62 encoding and collision resistance."""
 
-import pytest
 from app.services.url_service import (
     BASE62_ALPHABET,
     encode_base62,

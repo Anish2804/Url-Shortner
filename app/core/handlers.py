@@ -38,7 +38,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         errors = []
         for err in exc.errors():
-            loc = " -> ".join(str(l) for l in err.get("loc", []))
+            loc = " -> ".join(str(part) for part in err.get("loc", []))
             errors.append({
                 "field": loc,
                 "message": err.get("msg", "Invalid value"),

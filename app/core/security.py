@@ -21,6 +21,7 @@ def ensure_utc(dt: Optional[datetime]) -> Optional[datetime]:
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
 
+
 # Argon2id password hasher with production parameters
 _ph = PasswordHasher(
     time_cost=3,
@@ -125,3 +126,41 @@ def generate_api_key(prefix: str = "lks") -> Tuple[str, str, str]:
 def constant_time_compare(val1: str, val2: str) -> bool:
     """HMAC constant-time string comparison to prevent timing attacks."""
     return hmac.compare_digest(val1.encode("utf-8"), val2.encode("utf-8"))
+
+
+def create_action_token(
+    subject: str,
+    action: str,
+    expires_delta: timedelta,
+    extra_claims: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Generate signed JWT token for single-purpose actions (e.g., password_reset, email_verify)."""
+    now = datetime.now(timezone.utc)
+    expire = now + expires_delta
+    payload: Dict[str, Any] = {
+        "sub": str(subject),
+        "iat": int(now.timestamp()),
+        "exp": int(expire.timestamp()),
+        "action": action,
+    }
+    if extra_claims:
+        payload.update(extra_claims)
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_action_token(token: str, expected_action: str) -> Dict[str, Any]:
+    """Decode and validate a single-purpose action token."""
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"require": ["exp", "sub", "iat"]},
+        )
+        if payload.get("action") != expected_action:
+            raise UnauthorizedException(f"Invalid token action: expected {expected_action}")
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise UnauthorizedException("Verification or reset token has expired")
+    except jwt.InvalidTokenError as e:
+        raise UnauthorizedException(f"Invalid verification or reset token: {str(e)}")

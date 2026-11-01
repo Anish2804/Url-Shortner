@@ -1,7 +1,7 @@
 """Authentication service managing user identity, Argon2id security, lockout, and JWT tokens."""
 
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Tuple
+from typing import Optional
 import uuid
 
 from app.core.config import settings
@@ -15,7 +15,8 @@ from app.core.exceptions import (
 from app.core.logging import get_logger
 from app.core.security import (
     create_access_token,
-    decode_access_token,
+    create_action_token,
+    decode_action_token,
     ensure_utc,
     generate_refresh_token,
     hash_password,
@@ -26,6 +27,8 @@ from app.models.user import RefreshToken, User
 from app.repositories.user_repo import UserRepository
 from app.schemas.auth import (
     ChangePasswordRequest,
+    EmailVerificationConfirm,
+    EmailVerificationRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
     TokenResponse,
@@ -208,3 +211,67 @@ class AuthService:
             refresh_token=raw_refresh,
             expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
+
+    async def request_password_reset(self, payload: PasswordResetRequest) -> Optional[str]:
+        """Initiate password reset flow. Returns token for notification delivery."""
+        user = await self.user_repo.get_by_email(payload.email)
+        if not user:
+            # Silent return to prevent user enumeration
+            logger.info("Password reset requested for non-existent email: %s", payload.email)
+            return None
+
+        token = create_action_token(
+            subject=str(user.id),
+            action="password_reset",
+            expires_delta=timedelta(minutes=15),
+            extra_claims={"email": user.email},
+        )
+        logger.info("Generated password reset token for user %s", user.username)
+        return token
+
+    async def reset_password(self, payload: PasswordResetConfirm) -> None:
+        """Validate reset token and update user password."""
+        token_data = decode_action_token(payload.token, expected_action="password_reset")
+        user_id_str = token_data.get("sub")
+        if not user_id_str:
+            raise UnauthorizedException("Invalid token payload")
+
+        user = await self.user_repo.get_by_id(uuid.UUID(user_id_str))
+        if not user or not user.is_active:
+            raise NotFoundException("User account not found or deactivated")
+
+        user.hashed_password = hash_password(payload.new_password)
+        await self.user_repo.update(user)
+        await self.user_repo.reset_failed_logins(user)
+        await self.user_repo.revoke_all_user_refresh_tokens(user.id)
+        logger.info("Password successfully reset for user %s", user.username)
+
+    async def request_email_verification(self, payload: EmailVerificationRequest) -> Optional[str]:
+        """Generate email verification token."""
+        user = await self.user_repo.get_by_email(payload.email)
+        if not user:
+            return None
+
+        token = create_action_token(
+            subject=str(user.id),
+            action="email_verification",
+            expires_delta=timedelta(hours=24),
+            extra_claims={"email": user.email},
+        )
+        logger.info("Generated email verification token for user %s", user.username)
+        return token
+
+    async def verify_email(self, payload: EmailVerificationConfirm) -> None:
+        """Confirm email verification token and mark account verified."""
+        token_data = decode_action_token(payload.token, expected_action="email_verification")
+        user_id_str = token_data.get("sub")
+        if not user_id_str:
+            raise UnauthorizedException("Invalid token payload")
+
+        user = await self.user_repo.get_by_id(uuid.UUID(user_id_str))
+        if not user or not user.is_active:
+            raise NotFoundException("User account not found or deactivated")
+
+        user.is_verified = True
+        await self.user_repo.update(user)
+        logger.info("Account email verified for user %s", user.username)

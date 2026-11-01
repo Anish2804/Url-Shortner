@@ -1,8 +1,7 @@
 """Authentication and registration request/response schemas."""
 
 import re
-from typing import Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserRegister(BaseModel):
@@ -74,3 +73,13 @@ class ChangePasswordRequest(BaseModel):
     """Change password for authenticated user."""
     old_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8, max_length=128)
+
+
+class EmailVerificationRequest(BaseModel):
+    """Request email verification token."""
+    email: str = Field(..., max_length=255)
+
+
+class EmailVerificationConfirm(BaseModel):
+    """Confirm email verification with received token."""
+    token: str = Field(..., min_length=10)

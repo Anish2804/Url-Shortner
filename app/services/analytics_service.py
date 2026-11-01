@@ -1,9 +1,8 @@
 """Analytics service for aggregated summaries, time-series metrics, and CSV reporting."""
 
-import uuid
 from datetime import date
 from typing import Optional
-from app.core.exceptions import BadRequestException, NotFoundException
+from app.core.exceptions import ForbiddenException, NotFoundException
 from app.models.user import User
 from app.repositories.analytics_repo import AnalyticsRepository
 from app.repositories.url_repo import UrlRepository
@@ -38,7 +37,7 @@ class AnalyticsService:
 
         # Authorization: owner or admin
         if url.user_id != user.id and not user.is_superuser:
-            raise BadRequestException("You do not have permission to view analytics for this URL")
+            raise ForbiddenException("You do not have permission to view analytics for this URL")
 
         raw_summary = await self.analytics_repo.get_url_summary(url.id, start_date, end_date)
 
@@ -88,6 +87,6 @@ class AnalyticsService:
             raise NotFoundException("Shortened URL not found")
 
         if url.user_id != user.id and not user.is_superuser:
-            raise BadRequestException("You do not have permission to export analytics for this URL")
+            raise ForbiddenException("You do not have permission to export analytics for this URL")
 
         return await self.analytics_repo.export_clicks_csv(url.id, start_date, end_date)

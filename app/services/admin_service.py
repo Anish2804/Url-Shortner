@@ -1,9 +1,9 @@
 """Administrative service for abuse reports, domain blocking, and platform governance."""
 
 import uuid
-from typing import List, Sequence
+from typing import List
 from app.core.exceptions import NotFoundException
-from app.models.abuse import AbuseReport, BlockedDomain
+from app.models.abuse import AbuseReport
 from app.models.user import User
 from app.repositories.abuse_repo import AbuseRepository
 from app.schemas.abuse import (

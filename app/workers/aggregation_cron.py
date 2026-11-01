@@ -5,12 +5,10 @@ import json
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 from sqlalchemy import desc, func, select
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from app.core.logging import get_logger, setup_logging
-from app.database.session import async_session_factory, engine
-from app.models.analytics import ClickEvent, DailyAggregate, HourlyAggregate
-from app.models.url import Url
+from app.core.logging import get_logger
+from app.database.session import async_session_factory
+from app.models.analytics import ClickEvent, DailyAggregate
 
 logger = get_logger("aggregation_cron")
 
@@ -97,6 +95,4 @@ async def run_daily_rollup(target_date: Optional[date] = None) -> None:
 
 
 if __name__ == "__main__":
-    from typing import Optional
-    setup_logging()
     asyncio.run(run_daily_rollup())

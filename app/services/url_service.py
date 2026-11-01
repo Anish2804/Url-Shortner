@@ -16,6 +16,7 @@ from app.core.config import settings
 from app.core.exceptions import (
     BadRequestException,
     ConflictException,
+    ForbiddenException,
     MaliciousDomainException,
     NotFoundException,
     SSRFBlockedException,
@@ -227,7 +228,7 @@ class UrlService:
 
         # Authorization check: only owner or superuser can edit
         if url.user_id != user.id and not user.is_superuser:
-            raise BadRequestException("You do not have permission to modify this URL")
+            raise ForbiddenException("You do not have permission to modify this URL")
 
         if payload.original_url:
             norm = self.validate_and_normalize_url(payload.original_url)
@@ -265,7 +266,7 @@ class UrlService:
             raise NotFoundException("Shortened URL not found")
 
         if url.user_id != user.id and not user.is_superuser:
-            raise BadRequestException("You do not have permission to delete this URL")
+            raise ForbiddenException("You do not have permission to delete this URL")
 
         await self.url_repo.soft_delete(url)
         await cache_service.invalidate(url.short_code, url.custom_alias)
