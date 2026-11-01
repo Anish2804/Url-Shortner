@@ -29,13 +29,13 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
                 "default-src 'self' https://cdn.jsdelivr.net; "
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
                 "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
-                "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+                "img-src 'self' data: blob: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
                 "font-src 'self' https://cdn.jsdelivr.net data:; "
                 "connect-src 'self'"
             )
         else:
             response.headers["Content-Security-Policy"] = (
-                "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+                "default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
             )
 
         # Referrer Policy
