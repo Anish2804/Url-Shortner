@@ -76,26 +76,26 @@ flowchart TD
     end
 
     %% Flow connections
-    Client -->|HTTP Request / Scan| Ingress
+    Client -->|"HTTP Request / Scan"| Ingress
     Ingress --> SecMW --> RateMW --> FastAPI
     
-    FastAPI -->|GET /| Dashboard
-    FastAPI -->|GET /{short_code}| RedirSvc
-    FastAPI -->|POST /api/v1/urls| UrlSvc
-    FastAPI -->|POST /api/v1/auth| AuthSvc
+    FastAPI -->|"GET /"| Dashboard
+    FastAPI -->|"GET /:code"| RedirSvc
+    FastAPI -->|"POST /api/v1/urls"| UrlSvc
+    FastAPI -->|"POST /api/v1/auth"| AuthSvc
 
-    RedirSvc -->|1. Check Cache| CacheSvc
-    CacheSvc <-->|Fast Path <2ms| Redis
-    CacheSvc -->|2. Fallback Lock & Query| Postgres
-    RedirSvc -->|Resolve IP| GeoSvc
+    RedirSvc -->|"1. Check Cache"| CacheSvc
+    CacheSvc <-->|"Fast Path &lt; 2ms"| Redis
+    CacheSvc -->|"2. Fallback Lock & Query"| Postgres
+    RedirSvc -->|"Resolve IP"| GeoSvc
     
-    RedirSvc -->|3. Non-blocking Enqueue| Queue
+    RedirSvc -->|"3. Non-blocking Enqueue"| Queue
     Queue --> Producer --> Kafka
     
     Kafka --> Worker --> Dedupe --> Postgres
-    AggCron -->|Nightly Rollup| Postgres
+    AggCron -->|"Nightly Rollup"| Postgres
     
-    FastAPI -.->|Metrics :8000/metrics| Prom
+    FastAPI -.->|"Metrics :8000/metrics"| Prom
     Prom -.-> Graf
 ```
 
