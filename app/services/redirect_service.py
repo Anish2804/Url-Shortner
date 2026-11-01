@@ -176,6 +176,10 @@ class RedirectService:
             except Exception:
                 referrer_domain = None
 
+        # GeoIP resolution
+        from app.services.geoip_service import geoip_service
+        country_code, city = geoip_service.resolve(client_ip)
+
         click_message = ClickEventMessage(
             url_id=url_record["id"],
             short_code=url_record["short_code"],
@@ -185,8 +189,8 @@ class RedirectService:
             device_type=device_type,
             browser=browser_name,
             os=os_name,
-            country_code=None,  # GeoIP hook ready
-            city=None,
+            country_code=country_code,
+            city=city,
             referrer=referrer_str[:512] if referrer_str else None,
             referrer_domain=referrer_domain,
             is_bot=is_bot,

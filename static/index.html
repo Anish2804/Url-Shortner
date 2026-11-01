@@ -72,7 +72,7 @@
         </div>
 
         <button type="button" id="optionsToggle" class="options-toggle-btn">
-          <span>Advanced Options (Alias, Password, One-Time) ▼</span>
+          <span>Advanced Options (Alias, Password, Burner, UTM) ▼</span>
         </button>
 
         <!-- Advanced Options Drawer -->
@@ -104,6 +104,44 @@
               </label>
             </div>
             <p style="font-size:0.75rem; color:var(--text-dim); margin-top:0.2rem;">Self-destructs immediately after the first visitor clicks it.</p>
+          </div>
+
+          <!-- UTM Campaign Builder Section -->
+          <div class="utm-builder-panel">
+            <div class="utm-header-row">
+              <span class="utm-title">🎯 UTM Campaign Builder (Marketing Attribution)</span>
+              <span style="font-size:0.75rem; color:var(--text-dim);">Auto-appends to long destination URL</span>
+            </div>
+
+            <!-- Quick Preset Pills -->
+            <div class="utm-presets-row">
+              <span style="font-size:0.75rem; color:var(--text-muted); align-self:center;">Presets:</span>
+              <button type="button" class="utm-preset-pill" data-source="google" data-medium="cpc" data-campaign="search_ads">Google Ads</button>
+              <button type="button" class="utm-preset-pill" data-source="twitter" data-medium="social" data-campaign="launch_post">Twitter / X</button>
+              <button type="button" class="utm-preset-pill" data-source="newsletter" data-medium="email" data-campaign="weekly_digest">Newsletter</button>
+              <button type="button" class="utm-preset-pill" data-source="linkedin" data-medium="social" data-campaign="b2b_promo">LinkedIn</button>
+              <button type="button" class="utm-preset-pill clear-btn" id="clearUtmBtn">Clear</button>
+            </div>
+
+            <div class="utm-inputs-grid">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="utmSource" style="font-size:0.75rem;">Campaign Source</label>
+                <input type="text" id="utmSource" class="form-control" placeholder="e.g. google, twitter" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="utmMedium" style="font-size:0.75rem;">Campaign Medium</label>
+                <input type="text" id="utmMedium" class="form-control" placeholder="e.g. cpc, email, social" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="utmCampaign" style="font-size:0.75rem;">Campaign Name</label>
+                <input type="text" id="utmCampaign" class="form-control" placeholder="e.g. summer_sale_2026" style="padding:0.5rem 0.75rem; font-size:0.85rem;">
+              </div>
+            </div>
+
+            <div id="utmPreviewRow" class="utm-preview-row">
+              <span style="color:var(--text-muted); font-weight:600;">Full URL Preview: </span>
+              <span id="utmPreviewText" class="utm-preview-text">(Paste destination URL above to preview)</span>
+            </div>
           </div>
         </div>
       </form>
@@ -219,13 +257,17 @@
         </div>
 
         <!-- Breakdowns Grid -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
           <div>
-            <div class="chart-title">Devices</div>
+            <div class="chart-title">🌍 Top Locations</div>
+            <div id="countriesBreakdownList" class="breakdown-list"></div>
+          </div>
+          <div>
+            <div class="chart-title">📱 Devices</div>
             <div id="devicesBreakdownList" class="breakdown-list"></div>
           </div>
           <div>
-            <div class="chart-title">Top Browsers</div>
+            <div class="chart-title">🌐 Top Browsers</div>
             <div id="browsersBreakdownList" class="breakdown-list"></div>
           </div>
         </div>

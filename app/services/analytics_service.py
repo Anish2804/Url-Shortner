@@ -46,7 +46,19 @@ class AnalyticsService:
         devices = [CategoryBreakdownItem(**d) for d in raw_summary["devices"]]
         browsers = [CategoryBreakdownItem(**b) for b in raw_summary["browsers"]]
         operating_systems = [CategoryBreakdownItem(**o) for o in raw_summary["operating_systems"]]
-        countries = [CategoryBreakdownItem(**c) for c in raw_summary["countries"]]
+        from app.services.geoip_service import country_code_to_flag
+        countries_list = []
+        for c in raw_summary["countries"]:
+            cat = c.get("category", "")
+            if cat and cat != "Unknown" and len(cat) == 2:
+                flag = country_code_to_flag(cat)
+                c_copy = dict(c)
+                c_copy["category"] = f"{flag} {cat.upper()}"
+                countries_list.append(CategoryBreakdownItem(**c_copy))
+            else:
+                countries_list.append(CategoryBreakdownItem(**c))
+
+        countries = countries_list
         referrers = [CategoryBreakdownItem(**r) for r in raw_summary["referrers"]]
 
         return UrlAnalyticsSummary(

@@ -212,15 +212,107 @@ authForm.addEventListener('submit', async (e) => {
 // -------------------------------------------------------------
 optionsToggle.addEventListener('click', () => {
   const isOpen = optionsDrawer.classList.toggle('open');
-  optionsToggle.querySelector('span').textContent = isOpen ? 'Hide Advanced Options ▲' : 'Advanced Options (Alias, Password, One-Time) ▼';
+  optionsToggle.querySelector('span').textContent = isOpen ? 'Hide Advanced Options ▲' : 'Advanced Options (Alias, Password, Burner, UTM) ▼';
 });
+
+// -------------------------------------------------------------
+// UTM Campaign Builder Helpers
+// -------------------------------------------------------------
+const utmSourceInput = document.getElementById('utmSource');
+const utmMediumInput = document.getElementById('utmMedium');
+const utmCampaignInput = document.getElementById('utmCampaign');
+const utmPreviewText = document.getElementById('utmPreviewText');
+const clearUtmBtn = document.getElementById('clearUtmBtn');
+const utmPresetPills = document.querySelectorAll('.utm-preset-pill[data-source]');
+
+function buildUrlWithUtm(baseStr) {
+  if (!baseStr) return '';
+  try {
+    let urlObj;
+    if (!baseStr.startsWith('http://') && !baseStr.startsWith('https://')) {
+      urlObj = new URL(`https://${baseStr}`);
+    } else {
+      urlObj = new URL(baseStr);
+    }
+    const src = utmSourceInput ? utmSourceInput.value.trim() : '';
+    const med = utmMediumInput ? utmMediumInput.value.trim() : '';
+    const camp = utmCampaignInput ? utmCampaignInput.value.trim() : '';
+
+    if (src) urlObj.searchParams.set('utm_source', src);
+    if (med) urlObj.searchParams.set('utm_medium', med);
+    if (camp) urlObj.searchParams.set('utm_campaign', camp);
+
+    return urlObj.toString();
+  } catch (err) {
+    return baseStr;
+  }
+}
+
+function updateUtmPreview() {
+  if (!utmPreviewText) return;
+  const base = document.getElementById('urlInput').value.trim();
+  const src = utmSourceInput ? utmSourceInput.value.trim() : '';
+  const med = utmMediumInput ? utmMediumInput.value.trim() : '';
+  const camp = utmCampaignInput ? utmCampaignInput.value.trim() : '';
+
+  if (!base) {
+    if (src || med || camp) {
+      const dummy = new URL('https://example.com');
+      if (src) dummy.searchParams.set('utm_source', src);
+      if (med) dummy.searchParams.set('utm_medium', med);
+      if (camp) dummy.searchParams.set('utm_campaign', camp);
+      utmPreviewText.textContent = `...${dummy.search}`;
+    } else {
+      utmPreviewText.textContent = '(Paste destination URL above to preview)';
+    }
+    return;
+  }
+
+  const finalUrl = buildUrlWithUtm(base);
+  utmPreviewText.textContent = finalUrl;
+}
+
+if (utmSourceInput) utmSourceInput.addEventListener('input', updateUtmPreview);
+if (utmMediumInput) utmMediumInput.addEventListener('input', updateUtmPreview);
+if (utmCampaignInput) utmCampaignInput.addEventListener('input', updateUtmPreview);
+document.getElementById('urlInput').addEventListener('input', updateUtmPreview);
+
+utmPresetPills.forEach(pill => {
+  pill.addEventListener('click', () => {
+    utmPresetPills.forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    if (utmSourceInput) utmSourceInput.value = pill.dataset.source || '';
+    if (utmMediumInput) utmMediumInput.value = pill.dataset.medium || '';
+    if (utmCampaignInput) utmCampaignInput.value = pill.dataset.campaign || '';
+    updateUtmPreview();
+    showToast(`Applied ${pill.textContent} preset 🎯`);
+  });
+});
+
+if (clearUtmBtn) {
+  clearUtmBtn.addEventListener('click', () => {
+    utmPresetPills.forEach(p => p.classList.remove('active'));
+    if (utmSourceInput) utmSourceInput.value = '';
+    if (utmMediumInput) utmMediumInput.value = '';
+    if (utmCampaignInput) utmCampaignInput.value = '';
+    updateUtmPreview();
+  });
+}
 
 // -------------------------------------------------------------
 // Shorten URL Workflow
 // -------------------------------------------------------------
 shortenForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const originalUrl = document.getElementById('urlInput').value.trim();
+  let originalUrl = document.getElementById('urlInput').value.trim();
+  const src = utmSourceInput ? utmSourceInput.value.trim() : '';
+  const med = utmMediumInput ? utmMediumInput.value.trim() : '';
+  const camp = utmCampaignInput ? utmCampaignInput.value.trim() : '';
+
+  if (src || med || camp) {
+    originalUrl = buildUrlWithUtm(originalUrl);
+  }
+
   const customAlias = document.getElementById('aliasInput').value.trim() || null;
   const password = document.getElementById('passwordInput').value || null;
   const isOneTime = document.getElementById('oneTimeToggle').checked;
@@ -419,12 +511,14 @@ async function openAnalyticsModal(code) {
   const totalClicksEl = document.getElementById('metricTotalClicks');
   const uniqueVisitorsEl = document.getElementById('metricUniqueVisitors');
   const botClicksEl = document.getElementById('metricBotClicks');
+  const countriesListEl = document.getElementById('countriesBreakdownList');
   const devicesListEl = document.getElementById('devicesBreakdownList');
   const browsersListEl = document.getElementById('browsersBreakdownList');
 
   totalClicksEl.textContent = '...';
   uniqueVisitorsEl.textContent = '...';
   botClicksEl.textContent = '...';
+  if (countriesListEl) countriesListEl.innerHTML = 'Loading...';
   devicesListEl.innerHTML = 'Loading...';
   browsersListEl.innerHTML = 'Loading...';
 
@@ -437,6 +531,25 @@ async function openAnalyticsModal(code) {
 
     // Draw Timeline Chart on Canvas
     drawClickTimelineChart(data.time_series || []);
+
+    // Render Countries Breakdown
+    if (countriesListEl) {
+      if (data.countries && data.countries.length > 0) {
+        countriesListEl.innerHTML = data.countries.map(c => `
+          <div>
+            <div class="breakdown-row">
+              <span>${c.category}</span>
+              <span style="font-weight:600">${c.count} (${c.percentage}%)</span>
+            </div>
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: ${c.percentage}%"></div>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        countriesListEl.innerHTML = '<span style="color:var(--text-dim)">No location data yet</span>';
+      }
+    }
 
     // Render Devices Breakdown
     if (data.devices && data.devices.length > 0) {
