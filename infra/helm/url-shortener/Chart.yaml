@@ -1,0 +1,17 @@
+apiVersion: v2
+name: url-shortener
+description: Production-grade Helm chart for Distributed URL Shortener & Analytics Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+maintainers:
+  - name: Engineering Team
+    email: devops@example.com
+keywords:
+  - url-shortener
+  - analytics
+  - distributed-systems
+  - fastapi
+  - kafka
+  - redis
+  - postgresql

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "url-shortener.fullname" . }}-config
+  labels:
+    {{- include "url-shortener.labels" . | nindent 4 }}
+data:
+  ENVIRONMENT: {{ .Values.config.environment | quote }}
+  DEBUG: {{ .Values.config.debug | quote }}
+  APP_PORT: {{ .Values.config.appPort | quote }}
+  BASE_URL: {{ .Values.config.baseUrl | quote }}
+  REDIS_URL: {{ .Values.config.redisUrl | quote }}
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.config.kafkaBootstrapServers | quote }}
+  KAFKA_TOPIC_CLICKS: {{ .Values.config.kafkaTopicClicks | quote }}
+  KAFKA_TOPIC_DLQ: {{ .Values.config.kafkaTopicDlq | quote }}
+  CACHE_DEFAULT_TTL: {{ .Values.config.cacheDefaultTtl | quote }}
+  CACHE_NULL_TTL: {{ .Values.config.cacheNullTtl | quote }}
+  RATE_LIMIT_GLOBAL_PER_MINUTE: {{ .Values.config.rateLimitGlobal | quote }}
+  RATE_LIMIT_ANONYMOUS_PER_MINUTE: {{ .Values.config.rateLimitAnonymous | quote }}
+  RATE_LIMIT_AUTHENTICATED_PER_MINUTE: {{ .Values.config.rateLimitAuthenticated | quote }}

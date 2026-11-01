@@ -1,0 +1,102 @@
+# Default values for url-shortener Helm chart
+replicaCount: 3
+
+image:
+  api:
+    repository: ghcr.io/yourorg/url-shortener-api
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  worker:
+    repository: ghcr.io/yourorg/url-shortener-worker
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: short.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: url-shortener-tls-cert
+      hosts:
+        - short.example.com
+
+resources:
+  api:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+  worker:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+config:
+  environment: "production"
+  debug: false
+  appPort: 8000
+  baseUrl: "https://short.example.com"
+  redisUrl: "redis://redis-master:6379/0"
+  kafkaBootstrapServers: "kafka:9092"
+  kafkaTopicClicks: "url-clicks"
+  kafkaTopicDlq: "url-clicks-dlq"
+  cacheDefaultTtl: 86400
+  cacheNullTtl: 60
+  rateLimitGlobal: 120
+  rateLimitAnonymous: 30
+  rateLimitAuthenticated: 300
+
+secrets:
+  databaseUrl: "postgresql+asyncpg://url_admin:SecurePass2026@postgres:5432/url_shortener"
+  secretKey: "helm_managed_super_secret_cryptographic_key_32_bytes_minimum"
+  ipHashSalt: "helm_managed_ip_salt_for_hmac_sha256_anonymization"
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

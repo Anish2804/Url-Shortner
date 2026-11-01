@@ -1,0 +1,47 @@
+groups:
+  - name: url_shortener_alerts
+    rules:
+      - alert: HighRedirectLatency
+        expr: histogram_quantile(0.99, sum(rate(redirect_latency_seconds_bucket[2m])) by (le)) > 0.030
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "URL Redirect p99 latency exceeded 30ms (SLA breach risk)"
+          description: "Current p99 latency is {{ $value }}s on service {{ $labels.service }}."
+
+      - alert: High5xxErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[2m])) / sum(rate(http_requests_total[2m])) > 0.01
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "API 5xx error rate exceeded 1%"
+          description: "5xx error rate is currently {{ $value | humanizePercentage }}."
+
+      - alert: RedisCacheDropSpike
+        expr: rate(cache_misses_total[5m]) / (rate(cache_hits_total[5m]) + rate(cache_misses_total[5m])) > 0.35
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis Cache Miss Ratio above 35%"
+          description: "Cache misses are elevated. Check for cold starts, eviction pressure, or cache penetration."
+
+      - alert: KafkaClickEventsDropped
+        expr: rate(events_dropped_total[1m]) > 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka bounded producer queue is dropping click events due to backpressure"
+          description: "Events dropped rate is {{ $value }} per second. Investigate broker connectivity or cluster capacity."
+
+      - alert: HighRateLimitRejection
+        expr: sum(rate(http_requests_total{status="429"}[2m])) / sum(rate(http_requests_total[2m])) > 0.15
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 15% of requests are encountering 429 rate limiting"
+          description: "Potential DDoS attempt, credential stuffing, or misconfigured scraping client."
