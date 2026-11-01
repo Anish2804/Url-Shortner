@@ -29,9 +29,10 @@ class AnalyticsService:
         end_date: Optional[date] = None,
     ) -> UrlAnalyticsSummary:
         """Fetch complete analytical breakdown for a URL owned by the user."""
-        url = await self.url_repo.get_by_short_code(short_code)
+        code = short_code.strip()
+        url = await self.url_repo.get_by_short_code(code)
         if not url:
-            url = await self.url_repo.get_by_alias(short_code)
+            url = await self.url_repo.get_by_alias(code)
         if not url:
             raise NotFoundException("Shortened URL not found")
 
@@ -80,9 +81,10 @@ class AnalyticsService:
         end_date: Optional[date] = None,
     ) -> str:
         """Generate raw click event CSV string for download."""
-        url = await self.url_repo.get_by_short_code(short_code)
+        code = short_code.strip()
+        url = await self.url_repo.get_by_short_code(code)
         if not url:
-            url = await self.url_repo.get_by_alias(short_code)
+            url = await self.url_repo.get_by_alias(code)
         if not url:
             raise NotFoundException("Shortened URL not found")
 
