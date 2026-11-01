@@ -1,6 +1,6 @@
 /**
- * LinkScale Platform — High-Performance Dashboard Logic
- * Linear / Vercel Level Frontend Craftsmanship
+ * LinkScale Enterprise Platform — World-Class Dashboard & Motion Engine
+ * Inspired by Linear, Stripe, Vercel & Raycast.
  */
 
 // Application State
@@ -57,7 +57,7 @@ const utmPresetPills = document.querySelectorAll('.utm-preset-pill[data-source]'
 let isRegisterMode = false;
 
 // -------------------------------------------------------------
-// 1. Theme Management (Light / Dark with localStorage & media query)
+// 1. Theme Management (Circular Reveal with View Transitions API)
 // -------------------------------------------------------------
 function initTheme() {
   const savedTheme = localStorage.getItem('linkscale_theme');
@@ -68,27 +68,96 @@ function initTheme() {
   }
 }
 
-if (themeToggleBtn) {
-  themeToggleBtn.addEventListener('click', () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+function toggleTheme(e) {
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+  const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+  const applyTheme = () => {
     document.documentElement.setAttribute('data-theme', nextTheme);
     localStorage.setItem('linkscale_theme', nextTheme);
     showToast(`Switched to ${nextTheme} theme`);
-    
+
     if (updateAmbientTheme) updateAmbientTheme();
 
-    // Redraw chart if analytics modal is open
-    if (state.currentAnalyticsCode && analyticsModal.classList.contains('active')) {
+    if (state.currentAnalyticsCode && analyticsModal && analyticsModal.classList.contains('active')) {
       drawClickTimelineChart(state.currentTimeSeries || []);
     }
+  };
+
+  if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    applyTheme();
+    return;
+  }
+
+  const x = e ? e.clientX : window.innerWidth / 2;
+  const y = e ? e.clientY : 30;
+  const endRadius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y)
+  );
+
+  const transition = document.startViewTransition(() => {
+    applyTheme();
   });
+
+  transition.ready.then(() => {
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`
+        ]
+      },
+      {
+        duration: 420,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        pseudoElement: '::view-transition-new(root)'
+      }
+    );
+  });
+}
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener('click', toggleTheme);
 }
 
 initTheme();
 
 // -------------------------------------------------------------
-// 2. Animated Ambient Aurora & Interactive Canvas Environment
+// 2. Global Mouse Tracking & 3D Tilt for Spotlight Cards
+// -------------------------------------------------------------
+window.addEventListener('mousemove', (e) => {
+  document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+  document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+}, { passive: true });
+
+document.querySelectorAll('.spotlight-card').forEach(card => {
+  let isHovered = false;
+  card.addEventListener('mouseenter', () => { isHovered = true; });
+
+  card.addEventListener('mousemove', (e) => {
+    if (!isHovered || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty('--mouse-x', `${x}px`);
+    card.style.setProperty('--mouse-y', `${y}px`);
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -3;
+    const rotateY = ((x - centerX) / centerX) * 3;
+    card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+  });
+
+  card.addEventListener('mouseleave', () => {
+    isHovered = false;
+    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+  });
+});
+
+// -------------------------------------------------------------
+// 3. Lightweight Particle Network Canvas Engine
 // -------------------------------------------------------------
 let updateAmbientTheme = null;
 
@@ -103,48 +172,35 @@ function initAmbientBackground() {
   let height = 0;
   let dpr = 1;
 
-  // Mouse Parallax & Reactive Spring
-  const mouse = { x: -1000, y: -1000, targetX: 0, targetY: 0, currentX: 0, currentY: 0 };
+  const mouse = { x: -1000, y: -1000 };
 
   window.addEventListener('mousemove', (e) => {
     mouse.x = e.clientX;
     mouse.y = e.clientY;
-    // Normalize coordinates for subtle organic parallax
-    mouse.targetX = (e.clientX / (width || 1) - 0.5) * 50;
-    mouse.targetY = (e.clientY / (height || 1) - 0.5) * 35;
   }, { passive: true });
 
   window.addEventListener('mouseleave', () => {
     mouse.x = -1000;
     mouse.y = -1000;
-    mouse.targetX = 0;
-    mouse.targetY = 0;
   });
 
-  // Aurora Nebula Orbs Configuration
-  const orbs = [
-    { baseX: 0.22, baseY: 0.16, rMin: 340, rMax: 500, speedX: 0.00045, speedY: 0.00035, phaseX: 0, phaseY: 1.2, parallax: 0.8, colorDark: [16, 185, 129, 0.16], colorLight: [16, 185, 129, 0.07] },
-    { baseX: 0.74, baseY: 0.20, rMin: 360, rMax: 540, speedX: 0.00038, speedY: 0.00042, phaseX: 2.1, phaseY: 0.5, parallax: 1.1, colorDark: [110, 231, 183, 0.13], colorLight: [110, 231, 183, 0.06] },
-    { baseX: 0.48, baseY: 0.38, rMin: 290, rMax: 440, speedX: 0.00052, speedY: 0.00048, phaseX: 4.2, phaseY: 3.1, parallax: 0.6, colorDark: [45, 212, 191, 0.12], colorLight: [45, 212, 191, 0.05] },
-    { baseX: 0.82, baseY: 0.62, rMin: 310, rMax: 480, speedX: 0.00032, speedY: 0.00030, phaseX: 1.5, phaseY: 4.5, parallax: 0.4, colorDark: [5, 150, 105, 0.11], colorLight: [5, 150, 105, 0.05] }
-  ];
-
-  // Ambient Floating Stardust Particles
-  const PARTICLE_COUNT = 34;
   const particles = [];
 
   function initParticles() {
     particles.length = 0;
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const isMobile = window.innerWidth < 768;
+    const count = isMobile ? 22 : 46;
+
+    for (let i = 0; i < count; i++) {
       particles.push({
         x: Math.random() * (width || window.innerWidth),
         y: Math.random() * (height || window.innerHeight),
-        vx: (Math.random() - 0.5) * 0.22,
-        vy: -0.12 - Math.random() * 0.32,
-        baseRadius: 1 + Math.random() * 1.4,
-        alpha: 0.2 + Math.random() * 0.45,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: -0.15 - Math.random() * 0.35,
+        radius: 1 + Math.random() * 1.5,
+        baseAlpha: 0.25 + Math.random() * 0.45,
         phase: Math.random() * Math.PI * 2,
-        speed: 0.008 + Math.random() * 0.012
+        speed: 0.01 + Math.random() * 0.015
       });
     }
   }
@@ -158,9 +214,7 @@ function initAmbientBackground() {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     ctx.scale(dpr, dpr);
-    if (particles.length === 0) {
-      initParticles();
-    }
+    initParticles();
   }
 
   resize();
@@ -169,60 +223,29 @@ function initAmbientBackground() {
   let animFrameId = null;
   let isRunning = true;
 
-  function render(time) {
+  function render() {
     if (!isRunning) return;
 
-    // Smooth mouse parallax damping
-    mouse.currentX += (mouse.targetX - mouse.currentX) * 0.05;
-    mouse.currentY += (mouse.targetY - mouse.currentY) * 0.05;
-
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-
-    // Clear canvas
     ctx.clearRect(0, 0, width, height);
 
-    // Ethereal blending: screen in dark mode for soft glowing nebula layers
-    ctx.globalCompositeOperation = isLight ? 'source-over' : 'screen';
-
-    // 1. Draw Aurora Orbs
-    for (let i = 0; i < orbs.length; i++) {
-      const orb = orbs[i];
-      const ox = width * orb.baseX + Math.sin(time * orb.speedX + orb.phaseX) * (width * 0.07) + mouse.currentX * orb.parallax;
-      const oy = height * orb.baseY + Math.cos(time * orb.speedY + orb.phaseY) * (height * 0.07) + mouse.currentY * orb.parallax;
-      const r = orb.rMin + (Math.sin(time * 0.0006 + orb.phaseX) * 0.5 + 0.5) * (orb.rMax - orb.rMin);
-
-      const color = isLight ? orb.colorLight : orb.colorDark;
-      const grad = ctx.createRadialGradient(ox, oy, 0, ox, oy, Math.max(r, 10));
-      grad.addColorStop(0, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3]})`);
-      grad.addColorStop(0.55, `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] * 0.4})`);
-      grad.addColorStop(1, `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0)`);
-
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(ox, oy, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 2. Draw Dust Particles & Proximity Connections
-    ctx.globalCompositeOperation = 'source-over';
-    const pColor = isLight ? '5, 150, 105' : '110, 231, 183';
-    const maxConnDist = 95;
+    const nodeColor = isLight ? '5, 150, 105' : '110, 231, 183';
+    const maxLinkDist = 88;
 
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
 
-      // Drift & shimmer
       p.x += p.vx;
       p.y += p.vy;
       p.phase += p.speed;
 
-      // Mouse repulsion aura
+      // Mouse deflection
       if (mouse.x > 0 && mouse.y > 0) {
         const dx = p.x - mouse.x;
         const dy = p.y - mouse.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < 110 && dist > 1) {
-          const force = ((110 - dist) / 110) * 1.1;
+        if (dist < 100 && dist > 1) {
+          const force = ((100 - dist) / 100) * 1.2;
           p.x += (dx / dist) * force;
           p.y += (dy / dist) * force;
         }
@@ -234,25 +257,24 @@ function initAmbientBackground() {
       if (p.y < -10) p.y = height + 10;
       if (p.y > height + 10) p.y = -10;
 
-      // Pulse alpha
-      const currentAlpha = Math.max(0.08, p.alpha * (0.7 + 0.3 * Math.sin(p.phase)));
+      const currentAlpha = Math.max(0.1, p.baseAlpha * (0.7 + 0.3 * Math.sin(p.phase)));
 
-      // Draw particle
+      // Draw node
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.baseRadius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${pColor}, ${currentAlpha})`;
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${nodeColor}, ${currentAlpha})`;
       ctx.fill();
 
-      // Proximity network connections
+      // Draw link / chain threads
       for (let j = i + 1; j < particles.length; j++) {
         const p2 = particles[j];
         const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-        if (dist < maxConnDist) {
-          const lineAlpha = (1 - dist / maxConnDist) * 0.12 * (isLight ? 0.6 : 1);
+        if (dist < maxLinkDist) {
+          const lineAlpha = (1 - dist / maxLinkDist) * 0.15 * (isLight ? 0.7 : 1);
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(${pColor}, ${lineAlpha})`;
+          ctx.strokeStyle = `rgba(${nodeColor}, ${lineAlpha})`;
           ctx.lineWidth = 0.8;
           ctx.stroke();
         }
@@ -264,7 +286,6 @@ function initAmbientBackground() {
     }
   }
 
-  // Handle visibility change (pause when tab hidden to preserve GPU/battery)
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       isRunning = false;
@@ -279,7 +300,7 @@ function initAmbientBackground() {
 
   updateAmbientTheme = () => {
     if (prefersReduced) {
-      render(1000);
+      render();
     }
   };
 
@@ -289,20 +310,144 @@ function initAmbientBackground() {
 initAmbientBackground();
 
 // -------------------------------------------------------------
-// 3. Spotlight Cursor Follower
+// 4. Typewriter URL Placeholder Cycling
 // -------------------------------------------------------------
-document.querySelectorAll('.spotlight-card').forEach(card => {
-  card.addEventListener('mousemove', (e) => {
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    card.style.setProperty('--mouse-x', `${x}px`);
-    card.style.setProperty('--mouse-y', `${y}px`);
+function initTypewriterPlaceholder() {
+  if (!urlInput) return;
+
+  const examples = [
+    'https://github.com/Anish2804/Url-Shortner',
+    'https://linear.app/features/roadmaps',
+    'https://stripe.com/docs/api/checkout',
+    'https://vercel.com/analytics/speed-insights'
+  ];
+
+  let exampleIndex = 0;
+  let charIndex = 0;
+  let isDeleting = false;
+  let isPaused = false;
+
+  function tick() {
+    if (isPaused || urlInput === document.activeElement || urlInput.value.length > 0) {
+      setTimeout(tick, 900);
+      return;
+    }
+
+    const currentText = examples[exampleIndex];
+    if (isDeleting) {
+      charIndex--;
+      urlInput.placeholder = currentText.substring(0, charIndex);
+      if (charIndex === 0) {
+        isDeleting = false;
+        exampleIndex = (exampleIndex + 1) % examples.length;
+        setTimeout(tick, 400);
+        return;
+      }
+      setTimeout(tick, 28);
+    } else {
+      charIndex++;
+      urlInput.placeholder = currentText.substring(0, charIndex);
+      if (charIndex === currentText.length) {
+        isDeleting = true;
+        setTimeout(tick, 2400);
+        return;
+      }
+      setTimeout(tick, 45);
+    }
+  }
+
+  urlInput.addEventListener('focus', () => { isPaused = true; });
+  urlInput.addEventListener('blur', () => {
+    if (!urlInput.value) isPaused = false;
   });
-});
+
+  tick();
+}
+
+initTypewriterPlaceholder();
 
 // -------------------------------------------------------------
-// 4. Toast Notifications
+// 5. Shorten Button Magnetic Hover & Ripple Effect
+// -------------------------------------------------------------
+function initMagneticButton() {
+  if (!shortenSubmitBtn) return;
+
+  shortenSubmitBtn.addEventListener('mousemove', (e) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const rect = shortenSubmitBtn.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    shortenSubmitBtn.style.transform = `translate(${x * 0.16}px, ${y * 0.16}px)`;
+  });
+
+  shortenSubmitBtn.addEventListener('mouseleave', () => {
+    shortenSubmitBtn.style.transform = 'translate(0px, 0px)';
+  });
+
+  shortenSubmitBtn.addEventListener('click', (e) => {
+    const rect = shortenSubmitBtn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple');
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = `${size}px`;
+    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+    shortenSubmitBtn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+}
+
+initMagneticButton();
+
+// -------------------------------------------------------------
+// 6. Confetti Burst on Result Card
+// -------------------------------------------------------------
+function fireMintConfetti() {
+  if (!resultCard || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const count = 36;
+  const colors = ['#6EE7B7', '#A7F3D0', '#D1FAE5', '#34D399', '#FFFFFF'];
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed; inset:0; pointer-events:none; z-index:9999; overflow:hidden;';
+  document.body.appendChild(container);
+
+  const rect = resultCard.getBoundingClientRect();
+  const originX = rect.left + rect.width / 2;
+  const originY = rect.top + 30;
+
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    const color = colors[Math.floor(Math.random() * colors.length)];
+    const size = 5 + Math.random() * 5;
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+    const velocity = 85 + Math.random() * 115;
+    const vx = Math.cos(angle) * velocity;
+    const vy = Math.sin(angle) * velocity - 55;
+
+    p.style.cssText = `
+      position: absolute;
+      left: ${originX}px;
+      top: ${originY}px;
+      width: ${size}px;
+      height: ${size * (Math.random() > 0.5 ? 1 : 1.5)}px;
+      background: ${color};
+      border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotate(0deg);
+      transition: transform 0.85s cubic-bezier(0.12, 0.85, 0.35, 1), opacity 0.85s ease-out;
+    `;
+    container.appendChild(p);
+
+    requestAnimationFrame(() => {
+      p.style.transform = `translate3d(${vx * 1.5}px, ${vy * 1.5 + 80}px, 0) rotate(${Math.random() * 360}deg)`;
+      p.style.opacity = '0';
+    });
+  }
+
+  setTimeout(() => container.remove(), 900);
+}
+
+// -------------------------------------------------------------
+// 7. Toast Notifications
 // -------------------------------------------------------------
 let toastTimer = null;
 function showToast(message, duration = 3000) {
@@ -316,7 +461,7 @@ function showToast(message, duration = 3000) {
 }
 
 // -------------------------------------------------------------
-// 4. API Request Helper
+// 8. API Request Helper
 // -------------------------------------------------------------
 async function apiRequest(endpoint, method = 'GET', data = null, isBlob = false) {
   const headers = {};
@@ -354,7 +499,7 @@ async function apiRequest(endpoint, method = 'GET', data = null, isBlob = false)
 }
 
 // -------------------------------------------------------------
-// 5. System Health Telemetry Poll
+// 9. System Health Telemetry Poll
 // -------------------------------------------------------------
 async function pollSystemHealth() {
   if (!systemStatusPill) return;
@@ -373,7 +518,7 @@ async function pollSystemHealth() {
 }
 
 // -------------------------------------------------------------
-// 6. Keyboard Shortcut (Cmd+K / Ctrl+K) & Paste Helper
+// 10. Keyboard Shortcut (Cmd+K / Ctrl+K) & Paste Helper
 // -------------------------------------------------------------
 window.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -404,7 +549,7 @@ if (pasteBtn && urlInput) {
 }
 
 // -------------------------------------------------------------
-// 7. UTM Campaign Builder
+// 11. UTM Campaign Builder
 // -------------------------------------------------------------
 function buildUrlWithUtm(baseStr) {
   if (!baseStr) return '';
@@ -481,7 +626,7 @@ if (clearUtmBtn) {
 }
 
 // -------------------------------------------------------------
-// 8. Advanced Options Accordion
+// 12. Advanced Options Accordion
 // -------------------------------------------------------------
 if (optionsToggle && optionsDrawer) {
   optionsToggle.addEventListener('click', () => {
@@ -492,7 +637,7 @@ if (optionsToggle && optionsDrawer) {
 }
 
 // -------------------------------------------------------------
-// 9. Shorten URL Submission Workflow
+// 13. Shorten URL Submission Workflow
 // -------------------------------------------------------------
 shortenForm.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -549,6 +694,9 @@ shortenForm.addEventListener('submit', async (e) => {
     if (openResultLinkBtn) openResultLinkBtn.href = data.short_url;
     resultCard.classList.add('active');
 
+    // Confetti burst
+    fireMintConfetti();
+
     // Update Result Badges
     const badgesContainer = document.getElementById('resultBadges');
     badgesContainer.innerHTML = '';
@@ -567,6 +715,15 @@ shortenForm.addEventListener('submit', async (e) => {
     if (state.token) {
       loadUserUrls();
     }
+
+    // Spinner -> Checkmark success morph
+    submitBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span>Created!</span>
+    `;
+    await new Promise(r => setTimeout(r, 1100));
   } catch (err) {
     showToast(`Failed: ${err.message}`);
   } finally {
@@ -582,7 +739,7 @@ shortenForm.addEventListener('submit', async (e) => {
 });
 
 // -------------------------------------------------------------
-// 10. Copy Button Morphing Micro-Interaction
+// 14. Copy Button Morphing Micro-Interaction
 // -------------------------------------------------------------
 copyBtn.addEventListener('click', () => {
   const url = shortUrlLink.textContent;
@@ -617,7 +774,7 @@ openQrModalBtn.addEventListener('click', () => {
 });
 
 // -------------------------------------------------------------
-// 11. QR Code Modal
+// 15. QR Code Modal
 // -------------------------------------------------------------
 function openQrModal(code) {
   qrImg.src = `/api/v1/urls/${encodeURIComponent(code)}/qr`;
@@ -632,7 +789,7 @@ function openQrModal(code) {
 }
 
 // -------------------------------------------------------------
-// 12. Load & Render User URLs Table with Rich Empty State
+// 16. Load & Render User URLs Table with Stagger & Count-Up
 // -------------------------------------------------------------
 async function loadUserUrls() {
   if (!state.token) {
@@ -655,6 +812,8 @@ function renderUrlsTable(urls) {
         <td colspan="4">
           <div class="empty-state-box">
             <div class="empty-icon-wrap">
+              <div class="orbiting-dot orbit-1"></div>
+              <div class="orbiting-dot orbit-2"></div>
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
@@ -670,7 +829,7 @@ function renderUrlsTable(urls) {
     return;
   }
 
-  urlsTableBody.innerHTML = urls.map(u => {
+  urlsTableBody.innerHTML = urls.map((u, idx) => {
     const code = u.custom_alias || u.short_code;
     const dest = u.original_url;
     const clicks = u.click_count || 0;
@@ -678,7 +837,7 @@ function renderUrlsTable(urls) {
     const isPwd = u.is_password_protected ? '<span class="badge badge-secure" style="margin-left:0.35rem">Locked</span>' : '';
 
     return `
-      <tr>
+      <tr class="table-row-animate" style="animation-delay: ${idx * 45}ms">
         <td>
           <div style="display:flex; align-items:center;">
             <a href="/${code}" target="_blank" class="table-code-link">/${code}</a>
@@ -695,7 +854,7 @@ function renderUrlsTable(urls) {
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
-            ${clicks}
+            <span class="counter-val" data-target="${clicks}">${clicks}</span>
           </span>
         </td>
         <td>
@@ -732,16 +891,39 @@ function renderUrlsTable(urls) {
       </tr>
     `;
   }).join('');
+
+  animateCountUps();
+}
+
+function animateCountUps() {
+  document.querySelectorAll('.counter-val').forEach(el => {
+    const target = parseInt(el.dataset.target, 10) || 0;
+    if (target === 0) return;
+    let start = 0;
+    const duration = 600;
+    const stepTime = 20;
+    const steps = duration / stepTime;
+    const inc = target / steps;
+    const timer = setInterval(() => {
+      start += inc;
+      if (start >= target) {
+        el.textContent = target;
+        clearInterval(timer);
+      } else {
+        el.textContent = Math.floor(start);
+      }
+    }, stepTime);
+  });
 }
 
 // -------------------------------------------------------------
-// 13. Delete Short Link
+// 17. Delete Short Link
 // -------------------------------------------------------------
 async function deleteUrl(code) {
-  if (!confirm(`Are you sure you want to delete /${code}?`)) return;
+  if (!confirm(`Are you sure you want to deactivate and delete /${code}?`)) return;
   try {
     await apiRequest(`/api/v1/urls/${encodeURIComponent(code)}`, 'DELETE');
-    showToast(`Deleted /${code}`);
+    showToast(`Deleted /${code} 🗑️`);
     loadUserUrls();
   } catch (err) {
     showToast(`Delete failed: ${err.message}`);
@@ -749,97 +931,89 @@ async function deleteUrl(code) {
 }
 
 // -------------------------------------------------------------
-// 14. Analytics Modal & Emerald Canvas Chart
+// 18. Analytics Modal & Mint Timeline Canvas Chart
 // -------------------------------------------------------------
 async function openAnalyticsModal(code) {
   state.currentAnalyticsCode = code;
-  analyticsModalTitle.textContent = `Analytics for /${code}`;
-  analyticsModal.classList.add('active');
+  analyticsModalTitle.textContent = `Real-Time Telemetry: /${code}`;
 
-  const totalClicksEl = document.getElementById('metricTotalClicks');
-  const uniqueVisitorsEl = document.getElementById('metricUniqueVisitors');
-  const botClicksEl = document.getElementById('metricBotClicks');
+  const totalClicksEl = document.getElementById('analyticsTotalClicks');
+  const uniqueVisitorsEl = document.getElementById('analyticsUniqueVisitors');
+  const lastClickedEl = document.getElementById('analyticsLastClicked');
   const countriesListEl = document.getElementById('countriesBreakdownList');
   const devicesListEl = document.getElementById('devicesBreakdownList');
   const browsersListEl = document.getElementById('browsersBreakdownList');
 
+  // Reset to loading state
   totalClicksEl.textContent = '...';
   uniqueVisitorsEl.textContent = '...';
-  botClicksEl.textContent = '...';
-  if (countriesListEl) countriesListEl.innerHTML = '<span style="color:var(--text-dim)">Loading...</span>';
-  devicesListEl.innerHTML = '<span style="color:var(--text-dim)">Loading...</span>';
-  browsersListEl.innerHTML = '<span style="color:var(--text-dim)">Loading...</span>';
+  lastClickedEl.textContent = '...';
+
+  analyticsModal.classList.add('active');
 
   try {
-    const data = await apiRequest(`/api/v1/analytics/urls/${encodeURIComponent(code)}`);
+    const data = await apiRequest(`/api/v1/analytics/${encodeURIComponent(code)}`);
 
-    totalClicksEl.textContent = data.total_clicks || 0;
-    uniqueVisitorsEl.textContent = data.unique_visitors || 0;
-    botClicksEl.textContent = data.bot_clicks || 0;
+    totalClicksEl.textContent = data.summary?.total_clicks || 0;
+    uniqueVisitorsEl.textContent = data.summary?.unique_visitors || 0;
+
+    if (data.summary?.last_clicked_at) {
+      const d = new Date(data.summary.last_clicked_at);
+      lastClickedEl.textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } else {
+      lastClickedEl.textContent = 'Never';
+    }
+
     state.currentTimeSeries = data.time_series || [];
-
-    // Draw Emerald Line Chart on Canvas
     drawClickTimelineChart(state.currentTimeSeries);
 
-    // Render Countries Breakdown
+    // Countries
     if (countriesListEl) {
       if (data.countries && data.countries.length > 0) {
         countriesListEl.innerHTML = data.countries.map(c => `
-          <div>
-            <div class="breakdown-row">
-              <span>${c.category}</span>
-              <span style="font-weight:600; font-family:var(--font-mono)">${c.count} (${c.percentage}%)</span>
-            </div>
-            <div class="progress-bar-bg">
-              <div class="progress-bar-fill" style="width: ${c.percentage}%"></div>
-            </div>
+          <div class="breakdown-item">
+            <span class="breakdown-name">${c.category}</span>
+            <span class="breakdown-count">${c.count} (${c.percentage}%)</span>
           </div>
         `).join('');
       } else {
-        countriesListEl.innerHTML = '<span style="color:var(--text-dim)">No location data yet</span>';
+        countriesListEl.innerHTML = '<span class="text-dim" style="font-size:0.8rem">No location data</span>';
       }
     }
 
-    // Render Devices Breakdown
-    if (data.devices && data.devices.length > 0) {
-      devicesListEl.innerHTML = data.devices.map(d => `
-        <div>
-          <div class="breakdown-row">
-            <span>${d.category}</span>
-            <span style="font-weight:600; font-family:var(--font-mono)">${d.count} (${d.percentage}%)</span>
+    // Devices
+    if (devicesListEl) {
+      if (data.devices && data.devices.length > 0) {
+        devicesListEl.innerHTML = data.devices.map(d => `
+          <div class="breakdown-item">
+            <span class="breakdown-name">${d.category}</span>
+            <span class="breakdown-count">${d.count} (${d.percentage}%)</span>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: ${d.percentage}%"></div>
-          </div>
-        </div>
-      `).join('');
-    } else {
-      devicesListEl.innerHTML = '<span style="color:var(--text-dim)">No device clicks yet</span>';
+        `).join('');
+      } else {
+        devicesListEl.innerHTML = '<span class="text-dim" style="font-size:0.8rem">No device data</span>';
+      }
     }
 
-    // Render Browsers Breakdown
-    if (data.browsers && data.browsers.length > 0) {
-      browsersListEl.innerHTML = data.browsers.map(b => `
-        <div>
-          <div class="breakdown-row">
-            <span>${b.category}</span>
-            <span style="font-weight:600; font-family:var(--font-mono)">${b.count} (${b.percentage}%)</span>
+    // Browsers
+    if (browsersListEl) {
+      if (data.browsers && data.browsers.length > 0) {
+        browsersListEl.innerHTML = data.browsers.map(b => `
+          <div class="breakdown-item">
+            <span class="breakdown-name">${b.category}</span>
+            <span class="breakdown-count">${b.count} (${b.percentage}%)</span>
           </div>
-          <div class="progress-bar-bg">
-            <div class="progress-bar-fill" style="width: ${b.percentage}%"></div>
-          </div>
-        </div>
-      `).join('');
-    } else {
-      browsersListEl.innerHTML = '<span style="color:var(--text-dim)">No browser data yet</span>';
+        `).join('');
+      } else {
+        browsersListEl.innerHTML = '<span class="text-dim" style="font-size:0.8rem">No browser data</span>';
+      }
     }
-
   } catch (err) {
-    showToast(`Failed to load analytics: ${err.message}`);
+    showToast(`Analytics Error: ${err.message}`);
   }
 }
 
-// High-Performance Emerald HTML5 Canvas Chart Renderer
+// Draw HTML5 Canvas Clickstream Chart with Mint Theme
 function drawClickTimelineChart(timeSeries) {
   const canvas = document.getElementById('clicksChart');
   if (!canvas) return;
@@ -852,8 +1026,8 @@ function drawClickTimelineChart(timeSeries) {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
 
   if (!timeSeries || timeSeries.length === 0) {
-    ctx.fillStyle = isLight ? '#525C55' : '#8A918D';
-    ctx.font = '13px Inter, sans-serif';
+    ctx.fillStyle = isLight ? '#74877C' : '#8E9D94';
+    ctx.font = '13px Manrope, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('No click history yet for this timeframe', width / 2, height / 2);
     return;
@@ -866,7 +1040,7 @@ function drawClickTimelineChart(timeSeries) {
   const maxClicks = Math.max(...timeSeries.map(p => p.clicks), 5);
   const stepX = chartWidth / Math.max(timeSeries.length - 1, 1);
 
-  // Draw Grid lines
+  // Grid lines
   ctx.strokeStyle = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(255, 255, 255, 0.05)';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -877,10 +1051,10 @@ function drawClickTimelineChart(timeSeries) {
   }
   ctx.stroke();
 
-  // Emerald Area Gradient Fill
+  // Mint Gradient Area Fill
   const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
-  gradient.addColorStop(0, 'rgba(34, 197, 94, 0.35)');
-  gradient.addColorStop(1, 'rgba(34, 197, 94, 0.0)');
+  gradient.addColorStop(0, 'rgba(110, 231, 183, 0.35)');
+  gradient.addColorStop(1, 'rgba(110, 231, 183, 0.0)');
 
   ctx.beginPath();
   timeSeries.forEach((pt, idx) => {
@@ -895,8 +1069,8 @@ function drawClickTimelineChart(timeSeries) {
   ctx.fillStyle = gradient;
   ctx.fill();
 
-  // Draw Emerald Line
-  ctx.strokeStyle = '#22C55E';
+  // Mint Stroke Line
+  ctx.strokeStyle = '#6EE7B7';
   ctx.lineWidth = 2.5;
   ctx.beginPath();
   timeSeries.forEach((pt, idx) => {
@@ -907,20 +1081,19 @@ function drawClickTimelineChart(timeSeries) {
   });
   ctx.stroke();
 
-  // Draw Glowing Data Points
+  // Mint Glowing Data Points
   timeSeries.forEach((pt, idx) => {
     const x = padding + (timeSeries.length === 1 ? chartWidth / 2 : idx * stepX);
     const y = height - padding - (pt.clicks / maxClicks) * chartHeight;
-    ctx.fillStyle = '#4ADE80';
+    ctx.fillStyle = '#A7F3D0';
     ctx.beginPath();
     ctx.arc(x, y, 4, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = isLight ? '#ffffff' : '#050706';
+    ctx.strokeStyle = isLight ? '#FFFFFF' : '#0B100D';
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Date/Hour label
-    ctx.fillStyle = isLight ? '#525C55' : '#8A918D';
+    ctx.fillStyle = isLight ? '#4B5C52' : '#8E9D94';
     ctx.font = '10px JetBrains Mono, monospace';
     ctx.textAlign = 'center';
     ctx.fillText(pt.date_or_hour.slice(-5), x, height - 10);
@@ -928,36 +1101,28 @@ function drawClickTimelineChart(timeSeries) {
 }
 
 // Export CSV Trigger
-exportCsvBtn.addEventListener('click', async () => {
-  if (!state.currentAnalyticsCode) return;
-  try {
-    exportCsvBtn.disabled = true;
-    exportCsvBtn.textContent = 'Generating CSV...';
-    const blob = await apiRequest(`/api/v1/analytics/urls/${encodeURIComponent(state.currentAnalyticsCode)}/export`, 'GET', null, true);
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `analytics_${state.currentAnalyticsCode}_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-    showToast('CSV export downloaded! 📊');
-  } catch (err) {
-    showToast(`Export failed: ${err.message}`);
-  } finally {
-    exportCsvBtn.disabled = false;
-    exportCsvBtn.innerHTML = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-        <polyline points="7 10 12 15 17 10"></polyline>
-        <line x1="12" y1="15" x2="12" y2="3"></line>
-      </svg>
-      Export CSV Spreadsheet
-    `;
-  }
-});
+if (exportCsvBtn) {
+  exportCsvBtn.addEventListener('click', async () => {
+    if (!state.currentAnalyticsCode) return;
+    try {
+      const blob = await apiRequest(`/api/v1/analytics/${encodeURIComponent(state.currentAnalyticsCode)}/export`, 'GET', null, true);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics_${state.currentAnalyticsCode}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      showToast('CSV Export downloaded! 📊');
+    } catch (err) {
+      showToast(`Export failed: ${err.message}`);
+    }
+  });
+}
 
 // -------------------------------------------------------------
-// 15. Authentication Workflow
+// 19. Authentication UI & Handlers
 // -------------------------------------------------------------
 function updateAuthUI() {
   if (state.token && state.user) {
@@ -966,7 +1131,7 @@ function updateAuthUI() {
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
-      <span>${state.user.username} (Logout)</span>
+      <span>${state.user.username} (Sign Out)</span>
     `;
     authBtn.classList.add('logged-in');
     loadUserUrls();
@@ -1051,6 +1216,7 @@ authForm.addEventListener('submit', async (e) => {
     authModal.classList.remove('active');
     updateAuthUI();
     showToast(`Welcome back, ${username}! 👋`);
+
     if (urlInput && urlInput.value.trim()) {
       shortenForm.requestSubmit();
     }
@@ -1063,7 +1229,7 @@ authForm.addEventListener('submit', async (e) => {
 });
 
 // -------------------------------------------------------------
-// 16. Modal Dismissal
+// 20. Modal Dismissal
 // -------------------------------------------------------------
 document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
   el.addEventListener('click', (e) => {
@@ -1074,10 +1240,27 @@ document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
 });
 
 // -------------------------------------------------------------
-// 17. Initialization
+// 21. Scroll Observer for Section In-View Transitions
+// -------------------------------------------------------------
+function initScrollObserver() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('section, .table-wrapper').forEach(el => observer.observe(el));
+}
+
+// -------------------------------------------------------------
+// 22. Initialization
 // -------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
   updateAuthUI();
   pollSystemHealth();
   setInterval(pollSystemHealth, 20000);
+  initScrollObserver();
 });

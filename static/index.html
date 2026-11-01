@@ -7,15 +7,22 @@
   <meta name="description" content="High-performance URL Shortener with real-time analytics, QR codes, password protection, and one-time burner links.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/dashboard.css?v=3.0.0">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=4.1.0">
 </head>
 <body>
 
-  <!-- Animated Ambient Aurora & Interactive Mesh Background -->
+  <!-- Atmospheric Animated Background: Aurora Orbs, Grid Spotlight, Particle Network, Film Grain -->
+  <div class="bg-aurora-layer" aria-hidden="true">
+    <div class="aurora-orb orb-mint"></div>
+    <div class="aurora-orb orb-white"></div>
+    <div class="aurora-orb orb-teal"></div>
+    <div class="aurora-orb orb-mint-2"></div>
+  </div>
   <canvas id="ambientCanvas" aria-hidden="true"></canvas>
-  <div class="bg-vignette" aria-hidden="true"></div>
   <div class="bg-grid-overlay" aria-hidden="true"></div>
+  <div class="bg-vignette" aria-hidden="true"></div>
+  <div class="bg-noise" aria-hidden="true"></div>
 
   <!-- Top Navigation Bar -->
   <header class="navbar">
@@ -80,8 +87,15 @@
       </div>
       
       <h1 class="hero-headline">
-        Shorten Links.<br>
-        <span class="gradient-text">Track Everything in Real Time.</span>
+        <span class="hero-word" style="--delay: 1">Shorten</span>
+        <span class="hero-word" style="--delay: 2">Links.</span><br>
+        <span class="gradient-text shimmer-text">
+          <span class="hero-word" style="--delay: 3">Track</span>
+          <span class="hero-word" style="--delay: 4">Everything</span>
+          <span class="hero-word" style="--delay: 5">in</span>
+          <span class="hero-word" style="--delay: 6">Real</span>
+          <span class="hero-word" style="--delay: 7">Time.</span>
+        </span>
       </h1>
       
       <p class="hero-subtext">
@@ -448,6 +462,6 @@
     </div>
   </footer>
 
-  <script src="/static/js/dashboard.js?v=3.0.0"></script>
+  <script src="/static/js/dashboard.js?v=4.1.0"></script>
 </body>
 </html>
