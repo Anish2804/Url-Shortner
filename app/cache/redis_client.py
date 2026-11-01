@@ -37,7 +37,7 @@ class RedisManager:
                 socket_connect_timeout=settings.REDIS_TIMEOUT_SECONDS,
                 decode_responses=True,
             )
-            await self._client.ping()
+            await asyncio.wait_for(self._client.ping(), timeout=1.0)
             self._is_available = True
             logger.info("Connected to Redis at %s", settings.REDIS_URL)
         except Exception as e:

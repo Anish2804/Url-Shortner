@@ -952,13 +952,13 @@ async function openAnalyticsModal(code) {
   analyticsModal.classList.add('active');
 
   try {
-    const data = await apiRequest(`/api/v1/analytics/${encodeURIComponent(code)}`);
+    const data = await apiRequest(`/api/v1/analytics/urls/${encodeURIComponent(code)}`);
 
-    totalClicksEl.textContent = data.summary?.total_clicks || 0;
-    uniqueVisitorsEl.textContent = data.summary?.unique_visitors || 0;
+    totalClicksEl.textContent = data.total_clicks ?? data.summary?.total_clicks ?? 0;
+    uniqueVisitorsEl.textContent = data.unique_visitors ?? data.summary?.unique_visitors ?? 0;
 
-    if (data.summary?.last_clicked_at) {
-      const d = new Date(data.summary.last_clicked_at);
+    if (data.last_clicked_at || data.summary?.last_clicked_at) {
+      const d = new Date(data.last_clicked_at || data.summary.last_clicked_at);
       lastClickedEl.textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
     } else {
       lastClickedEl.textContent = 'Never';
@@ -1105,7 +1105,7 @@ if (exportCsvBtn) {
   exportCsvBtn.addEventListener('click', async () => {
     if (!state.currentAnalyticsCode) return;
     try {
-      const blob = await apiRequest(`/api/v1/analytics/${encodeURIComponent(state.currentAnalyticsCode)}/export`, 'GET', null, true);
+      const blob = await apiRequest(`/api/v1/analytics/urls/${encodeURIComponent(state.currentAnalyticsCode)}/export`, 'GET', null, true);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

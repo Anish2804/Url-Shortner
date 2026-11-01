@@ -39,7 +39,7 @@ class KafkaProducerManager:
                 compression_type="gzip",
                 enable_idempotence=True,
             )
-            await self._producer.start()
+            await asyncio.wait_for(self._producer.start(), timeout=1.5)
             self._is_connected = True
             logger.info("Kafka producer connected to %s", settings.KAFKA_BOOTSTRAP_SERVERS)
         except Exception as e:
@@ -150,7 +150,7 @@ class KafkaProducerManager:
                         bootstrap_servers=settings.KAFKA_BOOTSTRAP_SERVERS,
                         request_timeout_ms=settings.KAFKA_PRODUCER_TIMEOUT_MS,
                     )
-                    await p.start()
+                    await asyncio.wait_for(p.start(), timeout=1.5)
                     self._producer = p
                     self._is_connected = True
                 except Exception:
