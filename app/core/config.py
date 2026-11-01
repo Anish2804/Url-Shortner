@@ -46,6 +46,16 @@ class Settings(BaseSettings):
     DATABASE_POOL_TIMEOUT: int = Field(default=30, ge=1)
     DATABASE_ECHO: bool = Field(default=False)
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_database_url(cls, v: str) -> str:
+        if isinstance(v, str):
+            if v.startswith("postgres://"):
+                return v.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif v.startswith("postgresql://") and not v.startswith("postgresql+"):
+                return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     # Redis
     REDIS_URL: str = Field(default="redis://localhost:6379/0")
     REDIS_MAX_CONNECTIONS: int = Field(default=50, ge=1)
