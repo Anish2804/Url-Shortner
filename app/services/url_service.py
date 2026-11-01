@@ -292,9 +292,26 @@ class UrlService:
         responses = [self._to_response(u) for u in items]
         return responses, total
 
-    def generate_qr_code(self, short_code: str, box_size: int = 10, border: int = 4) -> bytes:
+    def generate_qr_code(self, short_code: str, base_url: Optional[str] = None, box_size: int = 10, border: int = 4) -> bytes:
         """Generate high-resolution PNG QR code pointing to the shortened link."""
-        full_url = f"{settings.BASE_URL.rstrip('/')}/{short_code}"
+        effective_base = base_url or settings.BASE_URL
+        # In local development, resolve the Wi-Fi/LAN IP so mobile camera scanners on the same network can reach it
+        if "localhost" in effective_base or "127.0.0.1" in effective_base:
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.settimeout(0.2)
+                s.connect(("8.8.8.8", 80))
+                local_ip = s.getsockname()[0]
+                s.close()
+                if local_ip and not local_ip.startswith("127."):
+                    port = urllib.parse.urlsplit(effective_base).port or 8000
+                    scheme = urllib.parse.urlsplit(effective_base).scheme or "http"
+                    effective_base = f"{scheme}://{local_ip}:{port}"
+            except Exception:
+                pass
+
+        clean_code = short_code.strip()
+        full_url = f"{effective_base.rstrip('/')}/{clean_code}"
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_M,
