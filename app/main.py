@@ -118,7 +118,21 @@ def create_application() -> FastAPI:
     # 4. Include Master API v1 Router
     app.include_router(v1_router, prefix=settings.API_V1_STR)
 
-    # 5. Include Root Redirect Router (mounted directly at root /{short_code})
+    # 5. Static Files & Web Dashboard UI
+    import os
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+    if os.path.exists(static_dir):
+        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+        @app.get("/", include_in_schema=False)
+        @app.get("/dashboard", include_in_schema=False)
+        async def serve_dashboard():
+            return FileResponse(os.path.join(static_dir, "index.html"))
+
+    # 6. Include Root Redirect Router (mounted directly at root /{short_code})
     app.include_router(redirect_router)
 
     return app
