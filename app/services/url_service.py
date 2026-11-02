@@ -79,6 +79,9 @@ class UrlService:
     def validate_and_normalize_url(self, raw_url: str) -> str:
         """Validate destination URL against protocol, SSRF, and malformed inputs."""
         clean = raw_url.strip()
+        if not clean:
+            raise BadRequestException("Destination URL cannot be empty")
+
         if len(clean) > settings.MAX_URL_LENGTH:
             raise BadRequestException(f"URL length exceeds maximum allowed limit of {settings.MAX_URL_LENGTH} characters")
 
@@ -86,6 +89,14 @@ class UrlService:
             parsed = urllib.parse.urlsplit(clean)
         except Exception:
             raise BadRequestException("Malformed destination URL")
+
+        # Auto-prepend https:// if scheme is missing (e.g. google.com, wikipedia.org)
+        if not parsed.scheme:
+            clean = f"https://{clean}"
+            try:
+                parsed = urllib.parse.urlsplit(clean)
+            except Exception:
+                raise BadRequestException("Malformed destination URL")
 
         scheme = (parsed.scheme or "").lower()
         if scheme not in settings.ALLOWED_URL_SCHEMES:
@@ -294,7 +305,13 @@ class UrlService:
 
     def generate_qr_code(self, short_code: str, base_url: Optional[str] = None, box_size: int = 10, border: int = 4) -> bytes:
         """Generate high-resolution PNG QR code pointing to the shortened link."""
-        effective_base = base_url or settings.BASE_URL
+        effective_base = (base_url or settings.BASE_URL).strip().rstrip('/')
+        if not effective_base.startswith(("http://", "https://")):
+            if "." not in effective_base:
+                effective_base = f"https://{effective_base}.onrender.com"
+            else:
+                effective_base = f"https://{effective_base}"
+
         # In local development, resolve the Wi-Fi/LAN IP so mobile camera scanners on the same network can reach it
         if "localhost" in effective_base or "127.0.0.1" in effective_base:
             try:
@@ -334,7 +351,13 @@ class UrlService:
             is_expired = ensure_utc(url.expires_at) <= now
 
         code = url.custom_alias or url.short_code
-        full_short_url = f"{settings.BASE_URL.rstrip('/')}/{code}"
+        base = settings.BASE_URL.strip().rstrip('/')
+        if not base.startswith(("http://", "https://")):
+            if "." not in base:
+                base = f"https://{base}.onrender.com"
+            else:
+                base = f"https://{base}"
+        full_short_url = f"{base}/{code}"
 
         return UrlResponse(
             id=url.id,

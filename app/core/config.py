@@ -23,6 +23,20 @@ class Settings(BaseSettings):
     SECRET_KEY: str = Field(default="dev-secret-key-change-in-production-min-32-chars-long", description="Secret key for JWT and cryptography")
     BASE_URL: str = Field(default="http://localhost:8000", description="Base URL for shortened links")
 
+    @field_validator("BASE_URL", mode="before")
+    @classmethod
+    def assemble_base_url(cls, v: str) -> str:
+        if isinstance(v, str):
+            clean = v.strip().rstrip("/")
+            if clean:
+                if not clean.startswith(("http://", "https://")):
+                    if "." not in clean:
+                        clean = f"https://{clean}.onrender.com"
+                    else:
+                        clean = f"https://{clean}"
+                return clean
+        return v
+
     # CORS
     CORS_ORIGINS: Union[List[str], str] = Field(
         default=["http://localhost:3000", "http://localhost:8000", "http://127.0.0.1:8000"],

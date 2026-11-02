@@ -457,10 +457,16 @@ shortenForm.addEventListener('submit', async (e) => {
 
     const data = await apiRequest('/api/v1/urls/', 'POST', payload);
 
-    // Display Result Card
-    shortUrlLink.href = data.short_url;
-    shortUrlLink.textContent = data.short_url;
-    if (openResultLinkBtn) openResultLinkBtn.href = data.short_url;
+    // Display Result Card with guaranteed absolute URL
+    const origin = window.location.origin;
+    const code = data.custom_alias || data.short_code;
+    let fullUrl = data.short_url;
+    if (!fullUrl || (!fullUrl.startsWith('http://') && !fullUrl.startsWith('https://'))) {
+      fullUrl = `${origin}/${code}`;
+    }
+    shortUrlLink.href = fullUrl;
+    shortUrlLink.textContent = fullUrl;
+    if (openResultLinkBtn) openResultLinkBtn.href = fullUrl;
     resultCard.classList.add('active');
 
     // Confetti burst

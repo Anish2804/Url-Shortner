@@ -25,6 +25,11 @@ def test_normalize_valid_http_urls(url_service):
     u3 = "http://my-blog.org:80/"
     assert url_service.validate_and_normalize_url(u3) == "http://my-blog.org/"
 
+    # Auto-prepends https:// when user enters plain domains
+    assert url_service.validate_and_normalize_url("google.com") == "https://google.com"
+    assert url_service.validate_and_normalize_url("wikipedia.org") == "https://wikipedia.org"
+    assert url_service.validate_and_normalize_url("www.google.com/search?q=test") == "https://www.google.com/search?q=test"
+
 
 def test_reject_dangerous_schemes(url_service):
     dangerous = [
