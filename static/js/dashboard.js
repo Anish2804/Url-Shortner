@@ -705,34 +705,32 @@ async function deleteUrl(code) {
 // -------------------------------------------------------------
 async function openAnalyticsModal(code) {
   state.currentAnalyticsCode = code;
-  analyticsModalTitle.textContent = `Real-Time Telemetry: /${code}`;
+  if (analyticsModalTitle) {
+    analyticsModalTitle.textContent = `Real-Time Telemetry: /${code}`;
+  }
 
-  const totalClicksEl = document.getElementById('analyticsTotalClicks');
-  const uniqueVisitorsEl = document.getElementById('analyticsUniqueVisitors');
-  const lastClickedEl = document.getElementById('analyticsLastClicked');
+  const totalClicksEl = document.getElementById('metricTotalClicks') || document.getElementById('analyticsTotalClicks');
+  const uniqueVisitorsEl = document.getElementById('metricUniqueVisitors') || document.getElementById('analyticsUniqueVisitors');
+  const botClicksEl = document.getElementById('metricBotClicks') || document.getElementById('analyticsBotClicks');
   const countriesListEl = document.getElementById('countriesBreakdownList');
   const devicesListEl = document.getElementById('devicesBreakdownList');
   const browsersListEl = document.getElementById('browsersBreakdownList');
 
   // Reset to loading state
-  totalClicksEl.textContent = '...';
-  uniqueVisitorsEl.textContent = '...';
-  lastClickedEl.textContent = '...';
+  if (totalClicksEl) totalClicksEl.textContent = '...';
+  if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = '...';
+  if (botClicksEl) botClicksEl.textContent = '...';
 
-  analyticsModal.classList.add('active');
+  if (analyticsModal) {
+    analyticsModal.classList.add('active');
+  }
 
   try {
     const data = await apiRequest(`/api/v1/analytics/urls/${encodeURIComponent(code)}`);
 
-    totalClicksEl.textContent = data.total_clicks ?? data.summary?.total_clicks ?? 0;
-    uniqueVisitorsEl.textContent = data.unique_visitors ?? data.summary?.unique_visitors ?? 0;
-
-    if (data.last_clicked_at || data.summary?.last_clicked_at) {
-      const d = new Date(data.last_clicked_at || data.summary.last_clicked_at);
-      lastClickedEl.textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    } else {
-      lastClickedEl.textContent = 'Never';
-    }
+    if (totalClicksEl) totalClicksEl.textContent = data.total_clicks ?? data.summary?.total_clicks ?? 0;
+    if (uniqueVisitorsEl) uniqueVisitorsEl.textContent = data.unique_visitors ?? data.summary?.unique_visitors ?? 0;
+    if (botClicksEl) botClicksEl.textContent = data.bot_clicks ?? 0;
 
     state.currentTimeSeries = data.time_series || [];
     drawClickTimelineChart(state.currentTimeSeries);
