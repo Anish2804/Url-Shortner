@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/dashboard.css?v=6.3.0">
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=6.4.0">
 </head>
 <body>
 
@@ -171,10 +171,10 @@
           <div class="options-inner-grid">
             <div class="form-group">
               <label for="aliasInput">Custom Alias</label>
-              <div class="input-prefix-box">
-                <span class="url-prefix">/</span>
-                <input type="text" id="aliasInput" class="form-control" placeholder="e.g. launch-2026">
-              </div>
+              <label for="aliasInput" class="input-prefix-box">
+                <span class="url-prefix" aria-hidden="true">/</span>
+                <input type="text" id="aliasInput" class="form-control" placeholder="e.g. launch-2026" autocomplete="off" spellcheck="false">
+              </label>
             </div>
 
             <div class="form-group">
@@ -457,6 +457,6 @@
     </div>
   </footer>
 
-  <script src="/static/js/dashboard.js?v=6.3.0"></script>
+  <script src="/static/js/dashboard.js?v=6.4.0"></script>
 </body>
 </html>

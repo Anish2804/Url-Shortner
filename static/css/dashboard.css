@@ -852,12 +852,14 @@ main.container {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
+.options-inner-grid,
 .drawer-inner {
   overflow: hidden;
+  min-height: 0;
 }
 
 .drawer-content {
@@ -911,10 +913,15 @@ main.container {
 .input-prefix-box {
   display: flex;
   align-items: center;
+  width: 100%;
+  height: 44px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow: hidden;
+  cursor: text;
+  box-sizing: border-box;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .input-prefix-box:focus-within {
@@ -929,13 +936,21 @@ main.container {
   font-weight: 600;
   font-size: 0.95rem;
   user-select: none;
+  pointer-events: none;
+  flex-shrink: 0;
 }
 
 .input-prefix-box .form-control {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
   border: none;
   box-shadow: none;
-  padding-left: 0;
+  padding: 0 0.85rem 0 0.2rem;
   background: transparent;
+  cursor: text;
+  outline: none;
 }
 
 .select-control {

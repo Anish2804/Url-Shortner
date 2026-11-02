@@ -405,6 +405,15 @@ if (optionsToggle && optionsDrawer) {
   });
 }
 
+// Click anywhere on alias input box to focus
+const aliasPrefixBox = document.querySelector('.input-prefix-box');
+const aliasInputField = document.getElementById('aliasInput');
+if (aliasPrefixBox && aliasInputField) {
+  aliasPrefixBox.addEventListener('click', () => {
+    aliasInputField.focus();
+  });
+}
+
 // -------------------------------------------------------------
 // 13. Shorten URL Submission Workflow
 // -------------------------------------------------------------
