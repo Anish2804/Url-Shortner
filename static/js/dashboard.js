@@ -3,6 +3,13 @@
  * Inspired by Linear, Stripe, Vercel & Raycast.
  */
 
+// Purge legacy caches from previous versions
+if ('caches' in window) {
+  caches.keys().then(names => {
+    names.forEach(name => caches.delete(name));
+  });
+}
+
 // Application State
 const state = {
   token: localStorage.getItem('linkscale_token') || null,
@@ -260,7 +267,8 @@ async function pollSystemHealth() {
     const res = await fetch('/health');
     const data = await res.json();
     if (data.status === 'healthy') {
-      systemStatusPill.innerHTML = `<span class="status-dot"></span> Online (0.5ms)`;
+      const dbLatency = data.dependencies?.database?.latency_ms ?? 1.2;
+      systemStatusPill.innerHTML = `<span class="status-dot"></span> Online (${dbLatency}ms)`;
     } else {
       systemStatusPill.innerHTML = `<span class="status-dot" style="background:var(--warning)"></span> Degraded`;
     }

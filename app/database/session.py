@@ -69,7 +69,8 @@ async def check_db_health() -> Dict[str, Any]:
     try:
         async with async_session_factory() as session:
             await session.execute(text("SELECT 1"))
-        return {"status": "healthy", "latency_ms": 0.5}
+        latency_ms = round((time.perf_counter() - start) * 1000, 2)
+        return {"status": "healthy", "latency_ms": latency_ms}
     except Exception as e:
         latency_ms = round((time.perf_counter() - start) * 1000, 2)
         logger.error("Database health check failed: %s", str(e))
