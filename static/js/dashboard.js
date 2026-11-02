@@ -77,8 +77,6 @@ function toggleTheme(e) {
     localStorage.setItem('linkscale_theme', nextTheme);
     showToast(`Switched to ${nextTheme} theme`);
 
-    if (updateAmbientTheme) updateAmbientTheme();
-
     if (state.currentAnalyticsCode && analyticsModal && analyticsModal.classList.contains('active')) {
       drawClickTimelineChart(state.currentTimeSeries || []);
     }
@@ -124,53 +122,7 @@ if (themeToggleBtn) {
 initTheme();
 
 // -------------------------------------------------------------
-// 2. High-Performance Mouse Tracking & 3D Tilt for Spotlight Cards
-// -------------------------------------------------------------
-document.querySelectorAll('.spotlight-card').forEach(card => {
-  let isHovered = false;
-  let rafId = null;
-  let rect = null;
-
-  card.addEventListener('mouseenter', () => {
-    isHovered = true;
-    rect = card.getBoundingClientRect();
-  });
-
-  card.addEventListener('mousemove', (e) => {
-    if (!isHovered || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (!rect) rect = card.getBoundingClientRect();
-
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = requestAnimationFrame(() => {
-      card.style.setProperty('--mouse-x', `${x}px`);
-      card.style.setProperty('--mouse-y', `${y}px`);
-
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = ((y - centerY) / centerY) * -2.5;
-      const rotateY = ((x - centerX) / centerX) * 2.5;
-      card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
-    });
-  }, { passive: true });
-
-  card.addEventListener('mouseleave', () => {
-    isHovered = false;
-    rect = null;
-    if (rafId) cancelAnimationFrame(rafId);
-    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
-  });
-});
-
-// -------------------------------------------------------------
-// 3. Static High-Performance Setup
-// -------------------------------------------------------------
-let updateAmbientTheme = null;
-
-// -------------------------------------------------------------
-// 4. Input URL Placeholder Setup
+// 2. Input URL Placeholder Setup
 // -------------------------------------------------------------
 function initPlaceholder() {
   if (!urlInput) return;
@@ -180,22 +132,10 @@ function initPlaceholder() {
 initPlaceholder();
 
 // -------------------------------------------------------------
-// 5. Shorten Button Magnetic Hover & Ripple Effect
+// 3. Shorten Button Ripple Effect
 // -------------------------------------------------------------
 function initMagneticButton() {
   if (!shortenSubmitBtn) return;
-
-  shortenSubmitBtn.addEventListener('mousemove', (e) => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const rect = shortenSubmitBtn.getBoundingClientRect();
-    const x = e.clientX - rect.left - rect.width / 2;
-    const y = e.clientY - rect.top - rect.height / 2;
-    shortenSubmitBtn.style.transform = `translate(${x * 0.16}px, ${y * 0.16}px)`;
-  });
-
-  shortenSubmitBtn.addEventListener('mouseleave', () => {
-    shortenSubmitBtn.style.transform = 'translate(0px, 0px)';
-  });
 
   shortenSubmitBtn.addEventListener('click', (e) => {
     const rect = shortenSubmitBtn.getBoundingClientRect();
@@ -711,21 +651,7 @@ function renderUrlsTable(urls) {
 function animateCountUps() {
   document.querySelectorAll('.counter-val').forEach(el => {
     const target = parseInt(el.dataset.target, 10) || 0;
-    if (target === 0) return;
-    let start = 0;
-    const duration = 600;
-    const stepTime = 20;
-    const steps = duration / stepTime;
-    const inc = target / steps;
-    const timer = setInterval(() => {
-      start += inc;
-      if (start >= target) {
-        el.textContent = target;
-        clearInterval(timer);
-      } else {
-        el.textContent = Math.floor(start);
-      }
-    }, stepTime);
+    el.textContent = target;
   });
 }
 
@@ -1053,27 +979,10 @@ document.querySelectorAll('.modal-close, .modal-overlay').forEach(el => {
 });
 
 // -------------------------------------------------------------
-// 21. Scroll Observer for Section In-View Transitions
-// -------------------------------------------------------------
-function initScrollObserver() {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('in-view');
-      }
-    });
-  }, { threshold: 0.1 });
-
-  document.querySelectorAll('section, .table-wrapper').forEach(el => observer.observe(el));
-}
-
-// -------------------------------------------------------------
-// 22. Initialization
+// 21. Initialization
 // -------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
   updateAuthUI();
   pollSystemHealth();
   setInterval(pollSystemHealth, 60000);
-  initScrollObserver();
 });
