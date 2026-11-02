@@ -252,7 +252,16 @@ async function apiRequest(endpoint, method = 'GET', data = null, isBlob = false)
 
   const json = await response.json();
   if (!response.ok || json.success === false) {
-    const errorMsg = json.error ? json.error.message : 'API Request Failed';
+    let errorMsg = 'API Request Failed';
+    if (json.error && json.error.message) {
+      errorMsg = json.error.message;
+    } else if (json.detail) {
+      if (Array.isArray(json.detail)) {
+        errorMsg = json.detail.map(d => d.msg ? d.msg.replace('Value error, ', '') : (d.message || JSON.stringify(d))).join(', ');
+      } else {
+        errorMsg = json.detail;
+      }
+    }
     throw new Error(errorMsg);
   }
   return json.data;
@@ -942,15 +951,21 @@ authForm.addEventListener('submit', async (e) => {
     authSubmitBtn.textContent = 'Authenticating...';
 
     if (isRegisterMode) {
+      const cleanUser = username.replace(/[^\w\.\-]/g, '');
+      const validEmail = (email && email.includes('@') && email.includes('.')) ? email : `${cleanUser || 'user'}@example.com`;
       await apiRequest('/api/v1/auth/register', 'POST', {
-        username,
+        username: cleanUser || username,
         password,
-        email: email || `${username}@example.com`,
+        email: validEmail,
       });
       showToast('Registration successful! Signing you in...');
     }
 
-    const loginRes = await apiRequest('/api/v1/auth/login', 'POST', { username, password });
+    const loginRes = await apiRequest('/api/v1/auth/login', 'POST', {
+      username_or_email: username,
+      username: username,
+      password: password
+    });
     state.token = loginRes.access_token;
 
     const meRes = await apiRequest('/api/v1/auth/me');

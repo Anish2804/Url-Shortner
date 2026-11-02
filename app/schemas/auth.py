@@ -1,21 +1,19 @@
-"""Authentication and registration request/response schemas."""
-
+from typing import Any
 import re
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class UserRegister(BaseModel):
     """User registration payload."""
     email: str = Field(..., max_length=255, description="Valid user email address")
-    username: str = Field(..., min_length=3, max_length=50, description="Unique username")
-    password: str = Field(..., min_length=8, max_length=128, description="Strong user password")
+    username: str = Field(..., min_length=2, max_length=50, description="Unique username")
+    password: str = Field(..., min_length=6, max_length=128, description="User password")
 
     @field_validator("email")
     @classmethod
     def validate_email(cls, v: str) -> str:
         clean = v.strip().lower()
-        pattern = r"^[\w\.\+\-]+@[\w\-]+\.[a-zA-Z]{2,}$"
-        if not re.match(pattern, clean):
+        if "@" not in clean or "." not in clean:
             raise ValueError("Invalid email address format")
         return clean
 
@@ -30,19 +28,24 @@ class UserRegister(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password_strength(cls, v: str) -> str:
-        if not any(c.isupper() for c in v):
-            raise ValueError("Password must contain at least one uppercase letter")
-        if not any(c.islower() for c in v):
-            raise ValueError("Password must contain at least one lowercase letter")
-        if not any(c.isdigit() for c in v):
-            raise ValueError("Password must contain at least one digit")
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters")
         return v
 
 
 class UserLogin(BaseModel):
     """User login credential payload."""
-    username_or_email: str = Field(..., min_length=3, max_length=255)
+    username_or_email: str | None = Field(default=None, max_length=255)
+    username: str | None = None
     password: str = Field(..., min_length=1, max_length=128)
+
+    @model_validator(mode="before")
+    @classmethod
+    def resolve_username_or_email(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("username_or_email") and data.get("username"):
+                data["username_or_email"] = data["username"]
+        return data
 
 
 class TokenResponse(BaseModel):
