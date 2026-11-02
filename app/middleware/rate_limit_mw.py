@@ -15,8 +15,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         path = request.url.path
 
-        # Exclude health check and metrics from rate limits
-        if path in ("/health", "/metrics", "/docs", "/openapi.json"):
+        # Exclude static assets, frontend root, health check, and metrics from rate limits
+        if (
+            path in ("/", "/health", "/metrics", "/docs", "/openapi.json", "/dashboard", "/favicon.ico")
+            or path.startswith("/static/")
+            or path.endswith((".css", ".js", ".png", ".jpg", ".svg", ".ico", ".woff2", ".woff"))
+        ):
             return await call_next(request)
 
         # Extract client IP

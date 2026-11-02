@@ -154,16 +154,18 @@ body {
 .aurora-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(95px);
+  filter: blur(35px);
   opacity: 0.22;
   mix-blend-mode: screen;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  pointer-events: none;
 }
 
 [data-theme="light"] .aurora-orb {
   mix-blend-mode: multiply;
   opacity: 0.12;
-  filter: blur(110px);
+  filter: blur(40px);
 }
 
 .orb-mint {
@@ -246,12 +248,11 @@ body {
     linear-gradient(to right, var(--border-light) 1px, transparent 1px),
     linear-gradient(to bottom, var(--border-light) 1px, transparent 1px);
   background-size: 52px 52px;
-  mask-image: radial-gradient(480px circle at var(--mouse-x, 50%) var(--mouse-y, 25%), #000 15%, transparent 80%);
-  -webkit-mask-image: radial-gradient(480px circle at var(--mouse-x, 50%) var(--mouse-y, 25%), #000 15%, transparent 80%);
+  mask-image: radial-gradient(650px circle at 50% 25%, #000 15%, transparent 80%);
+  -webkit-mask-image: radial-gradient(650px circle at 50% 25%, #000 15%, transparent 80%);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.65;
-  transition: opacity 0.3s ease;
+  opacity: 0.5;
 }
 
 /* Vignette */

@@ -112,17 +112,18 @@ class KafkaProducerManager:
         """Background worker consuming from bounded queue and delivering to Kafka."""
         while self._is_running:
             try:
-                # 1. First drain from Redis spillover if present
-                try:
-                    from app.cache.redis_client import redis_manager
-                    r_client = await redis_manager.get_client()
-                    if r_client:
-                        raw_item = await r_client.lpop("buffer:clicks:spillover")
-                        if raw_item:
-                            spillover_msg = ClickEventMessage.model_validate_json(raw_item)
-                            await self._publish_event(spillover_msg)
-                except Exception:
-                    pass
+                # 1. First drain from Redis spillover if Redis is connected
+                from app.cache.redis_client import redis_manager
+                if redis_manager.is_available:
+                    try:
+                        r_client = await redis_manager.get_client()
+                        if r_client:
+                            raw_item = await r_client.lpop("buffer:clicks:spillover")
+                            if raw_item:
+                                spillover_msg = ClickEventMessage.model_validate_json(raw_item)
+                                await self._publish_event(spillover_msg)
+                    except Exception:
+                        pass
 
                 # 2. Consume from internal bounded memory queue
                 try:

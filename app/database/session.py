@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.pool import NullPool
+from sqlalchemy.pool import NullPool, QueuePool
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -26,6 +26,7 @@ if "sqlite" in settings.DATABASE_URL:
     engine_kwargs["poolclass"] = NullPool
 else:
     engine_kwargs.update({
+        "poolclass": QueuePool,
         "pool_size": settings.DATABASE_POOL_SIZE,
         "max_overflow": settings.DATABASE_MAX_OVERFLOW,
         "pool_timeout": settings.DATABASE_POOL_TIMEOUT,

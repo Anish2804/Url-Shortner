@@ -18,7 +18,8 @@ class RedisManager:
         self._client: Optional[aioredis.Redis] = None
         self._is_available: bool = False
         self._last_check: float = 0.0
-        self._check_interval: float = 5.0  # seconds between reconnect attempts
+        self._check_interval: float = 60.0  # seconds between reconnect probes
+        self._reconnecting: bool = False
 
         # In-memory telemetry
         self.hits: int = 0
@@ -33,21 +34,24 @@ class RedisManager:
             self._client = aioredis.from_url(
                 settings.REDIS_URL,
                 max_connections=settings.REDIS_MAX_CONNECTIONS,
-                socket_timeout=settings.REDIS_TIMEOUT_SECONDS,
-                socket_connect_timeout=settings.REDIS_TIMEOUT_SECONDS,
+                socket_timeout=0.5,
+                socket_connect_timeout=0.5,
                 decode_responses=True,
             )
-            await asyncio.wait_for(self._client.ping(), timeout=1.0)
+            await asyncio.wait_for(self._client.ping(), timeout=0.5)
             self._is_available = True
             logger.info("Connected to Redis at %s", settings.REDIS_URL)
         except Exception as e:
             self._is_available = False
-            logger.warning("Redis is currently unavailable: %s. Operating in PostgreSQL fallback mode.", str(e))
+            logger.info("Redis offline (%s). Running in zero-delay direct PostgreSQL fallback mode.", str(e))
 
     async def close(self) -> None:
         """Close connection pool gracefully."""
         if self._client:
-            await self._client.aclose()
+            try:
+                await self._client.aclose()
+            except Exception:
+                pass
             self._client = None
             self._is_available = False
             logger.info("Redis connection closed")
@@ -57,26 +61,42 @@ class RedisManager:
         return self._is_available
 
     async def get_client(self) -> Optional[aioredis.Redis]:
-        """Return active Redis client or attempt reconnect if check interval elapsed."""
+        """Return active Redis client immediately without blocking caller if offline."""
+        if self._is_available:
+            return self._client
+
         now = time.monotonic()
-        if not self._is_available and (now - self._last_check > self._check_interval):
+        if not self._reconnecting and (now - self._last_check > self._check_interval):
             self._last_check = now
             try:
-                if self._client is None:
-                    self._client = aioredis.from_url(
-                        settings.REDIS_URL,
-                        max_connections=settings.REDIS_MAX_CONNECTIONS,
-                        socket_timeout=settings.REDIS_TIMEOUT_SECONDS,
-                        decode_responses=True,
-                    )
-                await asyncio.wait_for(self._client.ping(), timeout=settings.REDIS_TIMEOUT_SECONDS)
-                self._is_available = True
-                logger.info("Reconnected to Redis successfully")
-            except Exception:
-                self._is_available = False
-                return None
+                loop = asyncio.get_running_loop()
+                loop.create_task(self._probe_connection())
+            except RuntimeError:
+                pass
 
-        return self._client if self._is_available else None
+        return None
+
+    async def _probe_connection(self) -> None:
+        """Non-blocking background probe for Redis availability."""
+        if self._reconnecting:
+            return
+        self._reconnecting = True
+        try:
+            if self._client is None:
+                self._client = aioredis.from_url(
+                    settings.REDIS_URL,
+                    max_connections=settings.REDIS_MAX_CONNECTIONS,
+                    socket_timeout=0.5,
+                    socket_connect_timeout=0.5,
+                    decode_responses=True,
+                )
+            await asyncio.wait_for(self._client.ping(), timeout=0.5)
+            self._is_available = True
+            logger.info("Reconnected to Redis successfully")
+        except Exception:
+            self._is_available = False
+        finally:
+            self._reconnecting = False
 
     def record_hit(self) -> None:
         self.hits += 1

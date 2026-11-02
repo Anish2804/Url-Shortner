@@ -124,40 +124,48 @@ if (themeToggleBtn) {
 initTheme();
 
 // -------------------------------------------------------------
-// 2. Global Mouse Tracking & 3D Tilt for Spotlight Cards
+// 2. High-Performance Mouse Tracking & 3D Tilt for Spotlight Cards
 // -------------------------------------------------------------
-window.addEventListener('mousemove', (e) => {
-  document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-  document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-}, { passive: true });
-
 document.querySelectorAll('.spotlight-card').forEach(card => {
   let isHovered = false;
-  card.addEventListener('mouseenter', () => { isHovered = true; });
+  let rafId = null;
+  let rect = null;
+
+  card.addEventListener('mouseenter', () => {
+    isHovered = true;
+    rect = card.getBoundingClientRect();
+  });
 
   card.addEventListener('mousemove', (e) => {
     if (!isHovered || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const rect = card.getBoundingClientRect();
+    if (!rect) rect = card.getBoundingClientRect();
+
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    card.style.setProperty('--mouse-x', `${x}px`);
-    card.style.setProperty('--mouse-y', `${y}px`);
 
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -3;
-    const rotateY = ((x - centerX) / centerX) * 3;
-    card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
-  });
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = requestAnimationFrame(() => {
+      card.style.setProperty('--mouse-x', `${x}px`);
+      card.style.setProperty('--mouse-y', `${y}px`);
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -2.5;
+      const rotateY = ((x - centerX) / centerX) * 2.5;
+      card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg)`;
+    });
+  }, { passive: true });
 
   card.addEventListener('mouseleave', () => {
     isHovered = false;
+    rect = null;
+    if (rafId) cancelAnimationFrame(rafId);
     card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
   });
 });
 
 // -------------------------------------------------------------
-// 3. Lightweight Particle Network Canvas Engine
+// 3. Ultra-Lightweight Ambient Particle Engine (30-40 FPS Throttled)
 // -------------------------------------------------------------
 let updateAmbientTheme = null;
 
@@ -189,18 +197,18 @@ function initAmbientBackground() {
   function initParticles() {
     particles.length = 0;
     const isMobile = window.innerWidth < 768;
-    const count = isMobile ? 22 : 46;
+    const count = isMobile ? 12 : 24; // Optimized count for buttery 60fps without CPU heat
 
     for (let i = 0; i < count; i++) {
       particles.push({
         x: Math.random() * (width || window.innerWidth),
         y: Math.random() * (height || window.innerHeight),
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: -0.15 - Math.random() * 0.35,
-        radius: 1 + Math.random() * 1.5,
-        baseAlpha: 0.25 + Math.random() * 0.45,
+        vx: (Math.random() - 0.5) * 0.25,
+        vy: -0.12 - Math.random() * 0.25,
+        radius: 1 + Math.random() * 1.2,
+        baseAlpha: 0.2 + Math.random() * 0.35,
         phase: Math.random() * Math.PI * 2,
-        speed: 0.01 + Math.random() * 0.015
+        speed: 0.01 + Math.random() * 0.012
       });
     }
   }
@@ -208,7 +216,7 @@ function initAmbientBackground() {
   function resize() {
     width = window.innerWidth;
     height = window.innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5); // Cap DPR at 1.5 to save 50% GPU fill rate
     canvas.width = Math.floor(width * dpr);
     canvas.height = Math.floor(height * dpr);
     canvas.style.width = `${width}px`;
@@ -222,15 +230,31 @@ function initAmbientBackground() {
 
   let animFrameId = null;
   let isRunning = true;
+  let lastTime = 0;
+  const frameInterval = 1000 / 35; // 35 FPS target for fluid visual motion with near-zero CPU usage
 
-  function render() {
+  function render(currentTime) {
     if (!isRunning) return;
+
+    if (!prefersReduced) {
+      animFrameId = requestAnimationFrame(render);
+    }
+
+    if (currentTime - lastTime < frameInterval) {
+      return;
+    }
+    lastTime = currentTime;
 
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
     ctx.clearRect(0, 0, width, height);
 
     const nodeColor = isLight ? '5, 150, 105' : '110, 231, 183';
-    const maxLinkDist = 88;
+    const maxLinkDist = 80;
+
+    // Draw particle links with a single batched path
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(${nodeColor}, ${isLight ? 0.08 : 0.12})`;
+    ctx.lineWidth = 0.7;
 
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
@@ -244,8 +268,8 @@ function initAmbientBackground() {
         const dx = p.x - mouse.x;
         const dy = p.y - mouse.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < 100 && dist > 1) {
-          const force = ((100 - dist) / 100) * 1.2;
+        if (dist < 90 && dist > 1) {
+          const force = ((90 - dist) / 90) * 0.8;
           p.x += (dx / dist) * force;
           p.y += (dy / dist) * force;
         }
@@ -257,32 +281,26 @@ function initAmbientBackground() {
       if (p.y < -10) p.y = height + 10;
       if (p.y > height + 10) p.y = -10;
 
-      const currentAlpha = Math.max(0.1, p.baseAlpha * (0.7 + 0.3 * Math.sin(p.phase)));
-
-      // Draw node
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${nodeColor}, ${currentAlpha})`;
-      ctx.fill();
-
-      // Draw link / chain threads
       for (let j = i + 1; j < particles.length; j++) {
         const p2 = particles[j];
         const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
         if (dist < maxLinkDist) {
-          const lineAlpha = (1 - dist / maxLinkDist) * 0.15 * (isLight ? 0.7 : 1);
-          ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(${nodeColor}, ${lineAlpha})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
         }
       }
     }
+    ctx.stroke();
 
-    if (!prefersReduced) {
-      animFrameId = requestAnimationFrame(render);
+    // Draw particle nodes
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      const currentAlpha = Math.max(0.1, p.baseAlpha * (0.7 + 0.3 * Math.sin(p.phase)));
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${nodeColor}, ${currentAlpha})`;
+      ctx.fill();
     }
   }
 
