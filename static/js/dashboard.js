@@ -165,224 +165,19 @@ document.querySelectorAll('.spotlight-card').forEach(card => {
 });
 
 // -------------------------------------------------------------
-// 3. Ultra-Lightweight Ambient Particle Engine (30-40 FPS Throttled)
+// 3. Static High-Performance Setup
 // -------------------------------------------------------------
 let updateAmbientTheme = null;
 
-function initAmbientBackground() {
-  const canvas = document.getElementById('ambientCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let width = 0;
-  let height = 0;
-  let dpr = 1;
-
-  const mouse = { x: -1000, y: -1000 };
-
-  window.addEventListener('mousemove', (e) => {
-    mouse.x = e.clientX;
-    mouse.y = e.clientY;
-  }, { passive: true });
-
-  window.addEventListener('mouseleave', () => {
-    mouse.x = -1000;
-    mouse.y = -1000;
-  });
-
-  const particles = [];
-
-  function initParticles() {
-    particles.length = 0;
-    const isMobile = window.innerWidth < 768;
-    const count = isMobile ? 12 : 24; // Optimized count for buttery 60fps without CPU heat
-
-    for (let i = 0; i < count; i++) {
-      particles.push({
-        x: Math.random() * (width || window.innerWidth),
-        y: Math.random() * (height || window.innerHeight),
-        vx: (Math.random() - 0.5) * 0.25,
-        vy: -0.12 - Math.random() * 0.25,
-        radius: 1 + Math.random() * 1.2,
-        baseAlpha: 0.2 + Math.random() * 0.35,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.01 + Math.random() * 0.012
-      });
-    }
-  }
-
-  function resize() {
-    width = window.innerWidth;
-    height = window.innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5); // Cap DPR at 1.5 to save 50% GPU fill rate
-    canvas.width = Math.floor(width * dpr);
-    canvas.height = Math.floor(height * dpr);
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-    ctx.scale(dpr, dpr);
-    initParticles();
-  }
-
-  resize();
-  window.addEventListener('resize', resize, { passive: true });
-
-  let animFrameId = null;
-  let isRunning = true;
-  let lastTime = 0;
-  const frameInterval = 1000 / 35; // 35 FPS target for fluid visual motion with near-zero CPU usage
-
-  function render(currentTime) {
-    if (!isRunning) return;
-
-    if (!prefersReduced) {
-      animFrameId = requestAnimationFrame(render);
-    }
-
-    if (currentTime - lastTime < frameInterval) {
-      return;
-    }
-    lastTime = currentTime;
-
-    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    ctx.clearRect(0, 0, width, height);
-
-    const nodeColor = isLight ? '5, 150, 105' : '110, 231, 183';
-    const maxLinkDist = 80;
-
-    // Draw particle links with a single batched path
-    ctx.beginPath();
-    ctx.strokeStyle = `rgba(${nodeColor}, ${isLight ? 0.08 : 0.12})`;
-    ctx.lineWidth = 0.7;
-
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-
-      p.x += p.vx;
-      p.y += p.vy;
-      p.phase += p.speed;
-
-      // Mouse deflection
-      if (mouse.x > 0 && mouse.y > 0) {
-        const dx = p.x - mouse.x;
-        const dy = p.y - mouse.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 90 && dist > 1) {
-          const force = ((90 - dist) / 90) * 0.8;
-          p.x += (dx / dist) * force;
-          p.y += (dy / dist) * force;
-        }
-      }
-
-      // Edge wrap
-      if (p.x < -10) p.x = width + 10;
-      if (p.x > width + 10) p.x = -10;
-      if (p.y < -10) p.y = height + 10;
-      if (p.y > height + 10) p.y = -10;
-
-      for (let j = i + 1; j < particles.length; j++) {
-        const p2 = particles[j];
-        const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-        if (dist < maxLinkDist) {
-          ctx.moveTo(p.x, p.y);
-          ctx.lineTo(p2.x, p2.y);
-        }
-      }
-    }
-    ctx.stroke();
-
-    // Draw particle nodes
-    for (let i = 0; i < particles.length; i++) {
-      const p = particles[i];
-      const currentAlpha = Math.max(0.1, p.baseAlpha * (0.7 + 0.3 * Math.sin(p.phase)));
-
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${nodeColor}, ${currentAlpha})`;
-      ctx.fill();
-    }
-  }
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      isRunning = false;
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-    } else {
-      if (!isRunning && !prefersReduced) {
-        isRunning = true;
-        animFrameId = requestAnimationFrame(render);
-      }
-    }
-  });
-
-  updateAmbientTheme = () => {
-    if (prefersReduced) {
-      render();
-    }
-  };
-
-  animFrameId = requestAnimationFrame(render);
-}
-
-initAmbientBackground();
-
 // -------------------------------------------------------------
-// 4. Typewriter URL Placeholder Cycling
+// 4. Input URL Placeholder Setup
 // -------------------------------------------------------------
-function initTypewriterPlaceholder() {
+function initPlaceholder() {
   if (!urlInput) return;
-
-  const examples = [
-    'https://github.com/Anish2804/Url-Shortner',
-    'https://linear.app/features/roadmaps',
-    'https://stripe.com/docs/api/checkout',
-    'https://vercel.com/analytics/speed-insights'
-  ];
-
-  let exampleIndex = 0;
-  let charIndex = 0;
-  let isDeleting = false;
-  let isPaused = false;
-
-  function tick() {
-    if (isPaused || urlInput === document.activeElement || urlInput.value.length > 0) {
-      setTimeout(tick, 900);
-      return;
-    }
-
-    const currentText = examples[exampleIndex];
-    if (isDeleting) {
-      charIndex--;
-      urlInput.placeholder = currentText.substring(0, charIndex);
-      if (charIndex === 0) {
-        isDeleting = false;
-        exampleIndex = (exampleIndex + 1) % examples.length;
-        setTimeout(tick, 400);
-        return;
-      }
-      setTimeout(tick, 28);
-    } else {
-      charIndex++;
-      urlInput.placeholder = currentText.substring(0, charIndex);
-      if (charIndex === currentText.length) {
-        isDeleting = true;
-        setTimeout(tick, 2400);
-        return;
-      }
-      setTimeout(tick, 45);
-    }
-  }
-
-  urlInput.addEventListener('focus', () => { isPaused = true; });
-  urlInput.addEventListener('blur', () => {
-    if (!urlInput.value) isPaused = false;
-  });
-
-  tick();
+  urlInput.placeholder = 'Paste long URL (e.g. https://github.com/Anish2804/Url-Shortner)...';
 }
 
-initTypewriterPlaceholder();
+initPlaceholder();
 
 // -------------------------------------------------------------
 // 5. Shorten Button Magnetic Hover & Ripple Effect
@@ -1279,6 +1074,6 @@ function initScrollObserver() {
 window.addEventListener('DOMContentLoaded', () => {
   updateAuthUI();
   pollSystemHealth();
-  setInterval(pollSystemHealth, 20000);
+  setInterval(pollSystemHealth, 60000);
   initScrollObserver();
 });
