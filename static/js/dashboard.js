@@ -953,12 +953,20 @@ authForm.addEventListener('submit', async (e) => {
     if (isRegisterMode) {
       const cleanUser = username.replace(/[^\w\.\-]/g, '');
       const validEmail = (email && email.includes('@') && email.includes('.')) ? email : `${cleanUser || 'user'}@example.com`;
-      await apiRequest('/api/v1/auth/register', 'POST', {
-        username: cleanUser || username,
-        password,
-        email: validEmail,
-      });
-      showToast('Registration successful! Signing you in...');
+      try {
+        await apiRequest('/api/v1/auth/register', 'POST', {
+          username: cleanUser || username,
+          password,
+          email: validEmail,
+        });
+        showToast('Registration successful! Signing you in...');
+      } catch (regErr) {
+        if (regErr.message && (regErr.message.toLowerCase().includes('already exists') || regErr.message.includes('409') || regErr.message.toLowerCase().includes('conflict'))) {
+          showToast('Account already exists! Signing you in...');
+        } else {
+          throw regErr;
+        }
+      }
     }
 
     const loginRes = await apiRequest('/api/v1/auth/login', 'POST', {
@@ -968,7 +976,7 @@ authForm.addEventListener('submit', async (e) => {
     });
     state.token = loginRes.access_token;
 
-    const meRes = await apiRequest('/api/v1/auth/me');
+    const meRes = await apiRequest('/api/v1/users/me');
     state.user = meRes;
 
     localStorage.setItem('linkscale_token', state.token);

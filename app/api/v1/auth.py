@@ -80,6 +80,14 @@ async def change_password(
     return ApiResponse(success=True, data={"message": "Password changed successfully"})
 
 
+@router.get("/me", response_model=ApiResponse[UserResponse])
+async def get_current_user_profile_alias(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> ApiResponse[UserResponse]:
+    """Get current authenticated user identity (alias for /users/me)."""
+    return ApiResponse(success=True, data=UserResponse.model_validate(current_user))
+
+
 @router.post("/forgot-password", response_model=ApiResponse[dict])
 async def forgot_password(
     payload: PasswordResetRequest,
